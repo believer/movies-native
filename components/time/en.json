@@ -1,0 +1,12 @@
+{
+  "minutes" : "minutes including rewatches",
+  "or" : "... or",
+  "time": {
+    "day" : "day",
+    "days" : "days",
+    "hour" : "hour",
+    "hours" : "hours",
+    "minute" : "minute",
+    "minutes" : "minutes"
+  }
+}
