@@ -10,7 +10,10 @@ module.exports = React.createClass({
   render: function () {
     return (
       <View style={styles.container}>
-        <ActivityIndicatorIOS style={styles.scrollSpinner} />
+        <ActivityIndicatorIOS
+          style={styles.scrollSpinner}
+          color="#5CACC4"
+          size="large" />
         <Text style={styles.loader}>
           Loading movies
         </Text>
@@ -27,7 +30,9 @@ var styles = StyleSheet.create({
     alignItems: 'center',
   },
   loader: {
-    fontWeight: '700',
+    fontWeight: '300',
+    fontSize: 21,
+    marginTop: 10,
     color: '#5CACC4',
     textAlign: 'center'
   },

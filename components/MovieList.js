@@ -81,7 +81,7 @@ module.exports = React.createClass({
     resultsCache.dataForQuery[query] = null;
 
     this.setState({
-      isLoaded: false,
+      isLoaded: true,
       queryNumber: this.state.queryNumber + 1,
       isLoadedTail: false,
     });
@@ -116,17 +116,6 @@ module.exports = React.createClass({
       .done();
   },
 
-  hasMore: function(): boolean {
-    var query = this.state.filter;
-    if (!resultsCache.dataForQuery[query]) {
-      return true;
-    }
-    return (
-      resultsCache.totalForQuery[query] !==
-      resultsCache.dataForQuery[query].length
-    );
-  },
-
   getDataSource: function (movies: Array<any>): ListView.DataSource {
     return this.state.dataSource.cloneWithRows(movies);
   },
@@ -142,16 +131,11 @@ module.exports = React.createClass({
   addNewMovie: function () {
     this.props.navigator.push({
       title: 'Add new movie',
-      component: NewMovie
+      component: NewMovie,
+      passProps: {
+        animate: this.props.animate
+      }
     });
-  },
-
-  renderFooter: function() {
-    if (!this.hasMore() || !this.state.isLoadingTail) {
-      return <View style={styles.scrollSpinner} />;
-    }
-
-    return <ActivityIndicatorIOS style={styles.scrollSpinner} />;
   },
 
   renderRow: function(movie: Object) {
@@ -170,8 +154,6 @@ module.exports = React.createClass({
   },
 
   handleTouchStart: function (event: Object) {
-    console.log(event);
-
     this.startX = event.nativeEvent.pageX;
     this.startY = event.nativeEvent.pageY;
   },
@@ -205,15 +187,18 @@ module.exports = React.createClass({
   render: function() {
     var text;
 
+    if (!this.state.isLoaded) {
+      return <Loader style={styles.loader} />;
+    }
+
     if (this.state.filter) {
-      text = <Text ref="query" style={styles.results}>Showing {resultsCache.totalForQuery[this.state.filter]} movies for query {this.state.filter}</Text>
+      text = <Text ref="query" style={styles.results}>Showing <Text style={styles.bold}>{resultsCache.totalForQuery[this.state.filter]}</Text> movies for query <Text style={styles.bold}>{this.state.filter}</Text></Text>
     } else {
       text = <Text ref="query"></Text>;
     }
 
     return (
       <ScrollView style={this.state.container}>
-
         <View style={styles.searchAdd}>
           <Button clickFunction={this.addNewMovie} text="+ Add new"/>
           <SearchBar
@@ -222,9 +207,6 @@ module.exports = React.createClass({
   r         onFocus={() => this.refs.listview.getScrollResponder().scrollTo(0, 0)}/>
           {text}
         </View>
-        <Notification />
-        <Text onPress={this.animate}>Animationtest</Text>
-        {!this.state.isLoaded ? <Loader /> :
         <ListView
           ref="listview"
           onTouchStart={(event) => this.handleTouchStart(event)}
@@ -232,22 +214,16 @@ module.exports = React.createClass({
           dataSource={this.state.dataSource}
           renderFooter={this.renderFooter}
           renderRow={this.renderRow}
-          onEndReached={this.onEndReached}
           automaticallyAdjustContentInsets={false}
           keyboardDismissMode="onDrag"
           keyboardShouldPersistTaps={true}
-          showsVerticalScrollIndicator={false} />}
+          showsVerticalScrollIndicator={false} />
       </ScrollView>
     );
   }
 });
 
 var styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    marginTop: -120,
-  },
   addNew: {
     height: 20,
     color: '#ffffff',
@@ -262,5 +238,11 @@ var styles = StyleSheet.create({
     color: '#999999',
     marginBottom: 10,
     textAlign: 'center'
+  },
+  loader: {
+    flex: 1
+  },
+  bold: {
+    fontWeight: '700'
   }
 });

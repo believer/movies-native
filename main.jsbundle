@@ -934,7 +934,7 @@ Object.assign = function(target, sources) {
   setupErrorGuard();
 })(this);
 
-__d('moviesNative/index.ios',["react-native/Libraries/react-native/react-native","moviesNative/components/Loader","moviesNative/components/MovieList"],function(global, require, requireDynamic, requireLazy, module, exports) {  /**
+__d('moviesNative/index.ios',["react-native/Libraries/react-native/react-native","moviesNative/components/Loader","moviesNative/components/MovieList","moviesNative/components/Notification"],function(global, require, requireDynamic, requireLazy, module, exports) {  /**
  * Sample React Native App
  * https://github.com/facebook/react-native
  */
@@ -943,30 +943,63 @@ __d('moviesNative/index.ios',["react-native/Libraries/react-native/react-native"
 var React = require('react-native/Libraries/react-native/react-native');
 var Loader = require('moviesNative/components/Loader');
 var MovieList = require('moviesNative/components/MovieList');
+var Notification = require('moviesNative/components/Notification');
 
 var $__0=
   
   
   
   
-  React,AppRegistry=$__0.AppRegistry,NavigatorIOS=$__0.NavigatorIOS,StyleSheet=$__0.StyleSheet,View=$__0.View;
+  
+  React,Animation=$__0.Animation,AppRegistry=$__0.AppRegistry,NavigatorIOS=$__0.NavigatorIOS,StyleSheet=$__0.StyleSheet,View=$__0.View;
 
 var moviesNative = React.createClass({displayName: "moviesNative",
+  getInitialState: function () {
+    return {
+      message: '',
+      icon: '',
+      style: 'notification'
+    }
+  },
+
+  animate: function (message        , type        ) {
+    var icon = type === 'success' ? '✓' : '×';
+
+    this.setState({
+      message: message,
+      icon: icon,
+      style: type
+    });
+
+    Animation.startAnimation(this.refs.notification, 250, 0, 'easeInOutQuad', {opacity: 1 });
+
+    setTimeout(function()  {
+      Animation.startAnimation(this.refs.notification, 150, 0, 'easeInOutQuad', { opacity: 0 });
+    }.bind(this), 1000);
+  },
+
   render: function() {
     return (
-      React.createElement(NavigatorIOS, {
-        style: styles.container, 
-        initialRoute: {
-          title: 'Movies',
-          component: MovieList,
-        }})
+      React.createElement(View, {style: styles.container}, 
+        React.createElement(NavigatorIOS, {
+          style: styles.container, 
+          initialRoute: {
+            title: 'Movies',
+            component: MovieList,
+            passProps: {
+              animate: this.animate
+            }
+          }}), 
+        React.createElement(Notification, React.__spread({ref: "notification"},  this.state))
+      )
     );
   }
 });
 
 var styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    position: 'relative'
   },
 });
 
@@ -38380,7 +38413,10 @@ module.exports = React.createClass({displayName: "exports",
   render: function () {
     return (
       React.createElement(View, {style: styles.container}, 
-        React.createElement(ActivityIndicatorIOS, {style: styles.scrollSpinner}), 
+        React.createElement(ActivityIndicatorIOS, {
+          style: styles.scrollSpinner, 
+          color: "#5CACC4", 
+          size: "large"}), 
         React.createElement(Text, {style: styles.loader}, 
           "Loading movies"
         )
@@ -38397,7 +38433,9 @@ var styles = StyleSheet.create({
     alignItems: 'center',
   },
   loader: {
-    fontWeight: '700',
+    fontWeight: '300',
+    fontSize: 21,
+    marginTop: 10,
     color: '#5CACC4',
     textAlign: 'center'
   },
@@ -38406,12 +38444,13 @@ var styles = StyleSheet.create({
     width: 50
   }
 });});
-__d('moviesNative/components/MovieList',["react-native/Libraries/react-native/react-native","moviesNative/components/MovieCell","moviesNative/components/SearchBar","moviesNative/components/NewMovie","moviesNative/components/Button","moviesNative/components/Loader","moviesNative/components/Movie","react-timer-mixin/TimerMixin"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
+__d('moviesNative/components/MovieList',["react-native/Libraries/react-native/react-native","moviesNative/components/MovieCell","moviesNative/components/SearchBar","moviesNative/components/NewMovie","moviesNative/components/Notification","moviesNative/components/Button","moviesNative/components/Loader","moviesNative/components/Movie","react-timer-mixin/TimerMixin"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
 
 var React = require('react-native/Libraries/react-native/react-native');
 var MovieCell = require('moviesNative/components/MovieCell');
 var SearchBar = require('moviesNative/components/SearchBar');
 var NewMovie = require('moviesNative/components/NewMovie');
+var Notification = require('moviesNative/components/Notification');
 var Button = require('moviesNative/components/Button');
 var Loader = require('moviesNative/components/Loader');
 var Movie = require('moviesNative/components/Movie');
@@ -38488,7 +38527,7 @@ module.exports = React.createClass({displayName: "exports",
     resultsCache.dataForQuery[query] = null;
 
     this.setState({
-      isLoaded: false,
+      isLoaded: true,
       queryNumber: this.state.queryNumber + 1,
       isLoadedTail: false,
     });
@@ -38523,17 +38562,6 @@ module.exports = React.createClass({displayName: "exports",
       .done();
   },
 
-  hasMore: function()          {
-    var query = this.state.filter;
-    if (!resultsCache.dataForQuery[query]) {
-      return true;
-    }
-    return (
-      resultsCache.totalForQuery[query] !==
-      resultsCache.dataForQuery[query].length
-    );
-  },
-
   getDataSource: function (movies            )                      {
     return this.state.dataSource.cloneWithRows(movies);
   },
@@ -38549,16 +38577,11 @@ module.exports = React.createClass({displayName: "exports",
   addNewMovie: function () {
     this.props.navigator.push({
       title: 'Add new movie',
-      component: NewMovie
+      component: NewMovie,
+      passProps: {
+        animate: this.props.animate
+      }
     });
-  },
-
-  renderFooter: function() {
-    if (!this.hasMore() || !this.state.isLoadingTail) {
-      return React.createElement(View, {style: styles.scrollSpinner});
-    }
-
-    return React.createElement(ActivityIndicatorIOS, {style: styles.scrollSpinner});
   },
 
   renderRow: function(movie        ) {
@@ -38577,8 +38600,6 @@ module.exports = React.createClass({displayName: "exports",
   },
 
   handleTouchStart: function (event        ) {
-    console.log(event);
-
     this.startX = event.nativeEvent.pageX;
     this.startY = event.nativeEvent.pageY;
   },
@@ -38605,11 +38626,19 @@ module.exports = React.createClass({displayName: "exports",
     }
   },
 
+  animate: function () {
+    
+  },
+
   render: function() {
     var text;
 
+    if (!this.state.isLoaded) {
+      return React.createElement(Loader, {style: styles.loader});
+    }
+
     if (this.state.filter) {
-      text = React.createElement(Text, {ref: "query", style: styles.results}, "Showing ", resultsCache.totalForQuery[this.state.filter], " movies for query ", this.state.filter)
+      text = React.createElement(Text, {ref: "query", style: styles.results}, "Showing ", React.createElement(Text, {style: styles.bold}, resultsCache.totalForQuery[this.state.filter]), " movies for query ", React.createElement(Text, {style: styles.bold}, this.state.filter))
     } else {
       text = React.createElement(Text, {ref: "query"});
     }
@@ -38621,10 +38650,9 @@ module.exports = React.createClass({displayName: "exports",
           React.createElement(SearchBar, {
             onSearchChange: this.onSearchChange, 
             isLoaded: this.state.isLoaded, 
-  r: true, onFocus: function()  {return this.refs.listview.getScrollResponder().scrollTo(0, 0);}.bind(this)})
+  r: true, onFocus: function()  {return this.refs.listview.getScrollResponder().scrollTo(0, 0);}.bind(this)}), 
+          text
         ), 
-        text, 
-        !this.state.isLoaded ? React.createElement(Loader, null) :
         React.createElement(ListView, {
           ref: "listview", 
           onTouchStart: function(event)  {return this.handleTouchStart(event);}.bind(this), 
@@ -38632,7 +38660,6 @@ module.exports = React.createClass({displayName: "exports",
           dataSource: this.state.dataSource, 
           renderFooter: this.renderFooter, 
           renderRow: this.renderRow, 
-          onEndReached: this.onEndReached, 
           automaticallyAdjustContentInsets: false, 
           keyboardDismissMode: "onDrag", 
           keyboardShouldPersistTaps: true, 
@@ -38643,11 +38670,6 @@ module.exports = React.createClass({displayName: "exports",
 });
 
 var styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    marginTop: -120,
-  },
   addNew: {
     height: 20,
     color: '#ffffff',
@@ -38662,9 +38684,14 @@ var styles = StyleSheet.create({
     color: '#999999',
     marginBottom: 10,
     textAlign: 'center'
+  },
+  loader: {
+    flex: 1
+  },
+  bold: {
+    fontWeight: '700'
   }
-});
-});
+});});
 __d('moviesNative/components/MovieCell',["react-native/Libraries/react-native/react-native","moviesNative/utils/getStyleFromRating"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
 
 var React = require('react-native/Libraries/react-native/react-native');
@@ -38707,14 +38734,12 @@ module.exports = React.createClass({displayName: "exports",
       React.createElement(TouchableHighlight, {
         onPress: this.props.onSelect, 
         activeOpacity: 0.6}, 
-        React.createElement(View, null, 
-          React.createElement(View, {style: styles.movie}, 
-            React.createElement(Image, {
-              source: {uri: poster}, 
-              style: styles.thumbnail}), 
-            React.createElement(View, {style: ratingWrapper}, 
-              React.createElement(Text, {style: styles.rating}, this.props.rating)
-            )
+        React.createElement(View, {style: styles.movie}, 
+          React.createElement(Image, {
+            source: {uri: poster}, 
+            style: styles.thumbnail}), 
+          React.createElement(View, {style: ratingWrapper}, 
+            React.createElement(Text, {style: styles.rating}, this.props.rating)
           )
         )
       )
@@ -38723,58 +38748,15 @@ module.exports = React.createClass({displayName: "exports",
 });
 
 var styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   movie: {
-    marginTop: 15,
-    position: 'relative'
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '200',
-    width: 250
-  },
-  button: {
-    backgroundColor: '#F7AF63',
-    borderRadius: 5,
-    color: '#633D2E',
-    padding: 15,
-  },
-  ratingWrapper: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 25,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-    height: 50,
-    width: 50,
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
+    marginTop: 15
   },
   rating: {
     color: '#ffffff',
     fontSize: 24
   },
-  buttonText: {
-    fontWeight: '900',
-    textAlign: 'center',
-  },
   thumbnail: {
     borderRadius: 5,
-    shadowColor: '#000000a',
-    shadowOpacity: 1,
-    shadowOffset: {
-      h: 5,
-      w: 5
-    },
-    shadowRadius: 5,
     width: 290,
     height: 435,
   },
@@ -38783,33 +38765,27 @@ var styles = StyleSheet.create({
 __d('moviesNative/utils/getStyleFromRating',[],function(global, require, requireDynamic, requireLazy, module, exports) {  var MAX_VALUE = 200;
 
 function getStyleFromRating (rating        )                    {
-  if (!rating) { return; }
-
-  if (rating < 0) {
-    return {
-      color: '#333',
-      fontSize: 20,
-      position: 'absolute',
-      top: 20,
-      right: 30,
-    }
-  }
-
-  var normalizedScore = Math.round((rating / 10) * MAX_VALUE);
-
-  if (isNaN(normalizedScore)) { return; } 
-
-  return {
-    color: 'rgb(' +
-      (MAX_VALUE - normalizedScore) + ', ' +
-      normalizedScore + ', ' +
-      0 +
-    ')',
+  var standard = {
+    color: '#333333',
     fontSize: 20,
     position: 'absolute',
     top: 20,
     right: 30,
   };
+
+  if (!rating && rating < 0) { return standard; }
+
+  var normalizedScore = Math.round((rating / 10) * MAX_VALUE);
+
+  if (isNaN(normalizedScore)) { return standard; } 
+
+  standard.color = 'rgb(' +
+      (MAX_VALUE - normalizedScore) + ', ' +
+      normalizedScore + ', ' +
+      0 +
+    ')'
+
+  return standard;
 }
 
 module.exports = getStyleFromRating;});
@@ -38906,9 +38882,7 @@ module.exports = React.createClass({displayName: "exports",
     xhr.open('POST', REQUEST_URL, true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onload = function () {
-      self.setState({
-        addedNew: true
-      })
+      self.props.animate('Added new movie', 'success');
     };
 
     xhr.send('imdbid=' + this.state.id + '&rating=' + this.state.rating);
@@ -38923,10 +38897,6 @@ module.exports = React.createClass({displayName: "exports",
   },
 
   render: function () {
-    if (this.state.addedNew) {
-      return React.createElement(Text, {style: searchBar}, "Added new movie!")
-    }
-
     return (
       React.createElement(View, {style: styles.searchBar}, 
         React.createElement(TextInput, {
@@ -38963,8 +38933,8 @@ var styles = StyleSheet.create({
     fontSize: 15,
     flex: 1,
     marginTop: 10,
-    height: 30,
-    padding: 20,
+    height: 40,
+    padding: 3,
     paddingLeft: 8,
   },
   button: {
@@ -39013,6 +38983,62 @@ var styles = StyleSheet.create({
   }
 });
 });
+__d('moviesNative/components/Notification',["react-native/Libraries/react-native/react-native"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
+
+var React = require('react-native/Libraries/react-native/react-native');
+
+var $__0=
+  
+  
+  
+  
+  React,Animation=$__0.Animation,StyleSheet=$__0.StyleSheet,Text=$__0.Text,View=$__0.View;
+
+module.exports = React.createClass({displayName: "exports",
+  render: function () {
+    return (
+      React.createElement(View, {style: styles[this.props.style]}, 
+        React.createElement(Text, {style: styles.notificationText}, this.props.icon, " ", this.props.message)
+      )
+    );
+  }
+});
+
+var styles = StyleSheet.create({
+  notification: {
+    backgroundColor: '#333333',
+    width: 320,
+    position: 'absolute',
+    padding: 10,
+    paddingTop: 40,
+    paddingBottom: 30,
+    height: 50,
+    left: 0,
+    top: 0,
+    flex: 1,
+    opacity: 0,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  success: {
+    backgroundColor: '#8CD19D',
+    width: 320,
+    position: 'absolute',
+    padding: 10,
+    paddingTop: 40,
+    paddingBottom: 30,
+    height: 50,
+    left: 0,
+    top: 0,
+    flex: 1,
+    opacity: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationText: {
+    color: '#ffffff',
+  }
+});});
 __d('moviesNative/components/Movie',["react-native/Libraries/react-native/react-native","moviesNative/utils/getStyleFromRating"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
 
 var React = require('react-native/Libraries/react-native/react-native');

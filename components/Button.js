@@ -3,20 +3,22 @@ var React  = require('react-native');
 var {
   StyleSheet,
   Text,
-  TouchableHighlight,
+  TouchableOpacity,
   View,
 } = React;
 
 module.exports = React.createClass({
   render: function () {
     return (
-      <TouchableHighlight onPress={this.props.clickFunction}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={this.props.clickFunction}>
         <View style={styles.button}>
           <Text style={styles.buttonText}>
             {this.props.text}
           </Text>
         </View>
-      </TouchableHighlight>
+      </TouchableOpacity>
     );
   }
 });

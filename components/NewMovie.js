@@ -41,9 +41,7 @@ module.exports = React.createClass({
     xhr.open('POST', REQUEST_URL, true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onload = function () {
-      self.setState({
-        addedNew: true
-      })
+      self.props.animate('Added new movie', 'success');
     };
 
     xhr.send('imdbid=' + this.state.id + '&rating=' + this.state.rating);
@@ -58,10 +56,6 @@ module.exports = React.createClass({
   },
 
   render: function () {
-    if (this.state.addedNew) {
-      return <Text style={styles.searchBar}>Added new movie!</Text>
-    }
-
     return (
       <View style={styles.searchBar}>
         <TextInput
@@ -98,8 +92,8 @@ var styles = StyleSheet.create({
     fontSize: 15,
     flex: 1,
     marginTop: 10,
-    height: 30,
-    padding: 20,
+    height: 40,
+    padding: 3,
     paddingLeft: 8,
   },
   button: {
