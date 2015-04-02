@@ -3,7 +3,6 @@
 var React = require('react-native');
 var MovieCell = require('./MovieCell');
 var SearchBar = require('./SearchBar');
-var NewMovie = require('./NewMovie');
 var Notification = require('./Notification');
 var Button = require('./Button');
 var Loader = require('./Loader');
@@ -21,14 +20,7 @@ var {
 } = React;
 
 var REQUEST_URL = 'http://rickardlaurin.se:3000/movies';
-
-var resultsCache = {
-  dataForQuery: {},
-  nextPageNumberForQuery: {},
-  totalForQuery: {},
-};
-
-var LOADING = {};
+var PULLDOWN_DISTANCE = 40;
 
 module.exports = React.createClass({
   mixins: [TimerMixin],
@@ -43,12 +35,8 @@ module.exports = React.createClass({
       isLoaded: false,
       isLoadingTail: false,
       filter: '',
+      reloading: false,
       queryNumber: 0,
-      container: {
-        flex: 1,
-        padding: 15,
-        marginTop: -120,
-      }
     };
   },
 
@@ -61,59 +49,37 @@ module.exports = React.createClass({
   },
 
   searchMovies: function(query: string) {
-    this.timeoutID = null;
-    this.setState({filter: query});
-    var cachedResultsForQuery = resultsCache.dataForQuery[query];
-
-    if (cachedResultsForQuery) {
-      if (!LOADING[query]) {
-        this.setState({
-          dataSource: this.getDataSource(cachedResultsForQuery),
-          isLoaded: true
-        });
-      } else {
-        this.setState({ isLoaded: true });
-      }
-      return;
-    }
-
-    LOADING[query] = true;
-    resultsCache.dataForQuery[query] = null;
+    if (this.willReload || this.state.reloading) return
 
     this.setState({
-      isLoaded: true,
+      reloading: true,
+      filter: query,
       queryNumber: this.state.queryNumber + 1,
-      isLoadedTail: false,
     });
 
-    fetch(this._urlForQueryAndPage(query))
-      .then((response) => response.json())
-      .catch((error) => {
-        LOADING[query] = false;
-        resultsCache.dataForQuery[query] = undefined;
+    this.willReload = true
 
-        this.setState({
-          dataSource: this.getDataSource([]),
-          isLoaded: false,
-        });
-      })
-      .then((responseData) => {
-        LOADING[query] = false;
-        resultsCache.totalForQuery[query] = responseData.resultCount;
-        resultsCache.dataForQuery[query] = responseData.results;
-        resultsCache.nextPageNumberForQuery[query] = 2;
+    var self = this;
 
-        if (this.state.filter !== query) {
-          // do not update state if the query is stale
-          return;
-        }
-
-        this.setState({
-          isLoaded: true,
-          dataSource: this.getDataSource(responseData.results),
-        });
-      })
-      .done();
+    setTimeout(function () {
+      fetch(self._urlForQueryAndPage(query))
+        .then((response) => response.json())
+        .catch((error) => {
+          self.setState({
+            dataSource: self.getDataSource([]),
+            reloading: false,
+          });
+        })
+        .then((responseData) => {
+          self.willReload = false
+          self.setState({
+            isLoaded: true,
+            reloading: false,
+            dataSource: self.getDataSource(responseData.results),
+          });
+        })
+        .done();
+    }, 300);
   },
 
   getDataSource: function (movies: Array<any>): ListView.DataSource {
@@ -128,17 +94,7 @@ module.exports = React.createClass({
     });
   },
 
-  addNewMovie: function () {
-    this.props.navigator.push({
-      title: 'Add new movie',
-      component: NewMovie,
-      passProps: {
-        animate: this.props.animate
-      }
-    });
-  },
-
-  renderRow: function(movie: Object) {
+  renderRow: function(movie: Object) {   
     return (
       <MovieCell
         onSelect={() => this.selectMovie(movie)}
@@ -153,38 +109,30 @@ module.exports = React.createClass({
     this.timeoutID = this.setTimeout(() => this.searchMovies(filter), 100);
   },
 
-  handleTouchStart: function (event: Object) {
-    this.startX = event.nativeEvent.pageX;
-    this.startY = event.nativeEvent.pageY;
+  handleScroll(e: Object) {
+    console.log(e.nativeEvent.contentOffset.y);
+    if (e.nativeEvent.contentOffset.y < -PULLDOWN_DISTANCE) {
+      this.searchMovies()
+    }
+    this.props.onScroll && this.props.onScroll(e)
   },
 
-  handleTouchEnd: function (event: Object) {
-    var deltaX = event.nativeEvent.pageX - this.startX;
-    var deltaY = event.nativeEvent.pageY - this.startY;
-
-    var direction = -1;
-    if (Math.abs(deltaX) > 3 * Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-      direction = deltaX > 0 ? 2 : 0;
-    } else if (Math.abs(deltaY) > 3 * Math.abs(deltaX) && Math.abs(deltaY) > 30) {
-      direction = deltaY > 0 ? 3 : 1;
-    }
-
-    if (direction === 3) {
-      this.setState({
-        container: {
-          flex: 1,
-          padding: 15,
-          marginTop: 0,
-        }
-      });
+  renderHeader() {
+    if (this.state.reloading) {
+      return (
+      <View style={[styles.reloader, styles.wrapper]}>
+        <View style={[styles.reloader, styles.loading]}>
+          <Text>{this.props.refreshDescription}</Text>
+          <ActivityIndicatorIOS />
+        </View>
+      </View>
+      )
+    } else {
+      return null
     }
   },
 
-  animate: function () {
-    
-  },
-
-  render: function() {
+  render: function() {    
     var text;
 
     if (!this.state.isLoaded) {
@@ -198,32 +146,39 @@ module.exports = React.createClass({
     }
 
     return (
-      <ScrollView style={this.state.container}>
-        <View style={styles.searchAdd}>
-          <Button clickFunction={this.addNewMovie} text="+ Add new"/>
-          <SearchBar
-            onSearchChange={this.onSearchChange}
-            isLoaded={this.state.isLoaded}
-  r         onFocus={() => this.refs.listview.getScrollResponder().scrollTo(0, 0)}/>
-          {text}
-        </View>
-        <ListView
-          ref="listview"
-          onTouchStart={(event) => this.handleTouchStart(event)}
-          onTouchEnd={(event) => this.handleTouchEnd(event)}
-          dataSource={this.state.dataSource}
-          renderFooter={this.renderFooter}
-          renderRow={this.renderRow}
-          automaticallyAdjustContentInsets={false}
-          keyboardDismissMode="onDrag"
-          keyboardShouldPersistTaps={true}
-          showsVerticalScrollIndicator={false} />
-      </ScrollView>
+      <ListView
+        style={styles.container}
+        ref="listview"
+        onScroll={this.handleScroll}
+        dataSource={this.state.dataSource}
+        renderHeader={this.renderHeader}
+        renderRow={this.renderRow}
+        automaticallyAdjustContentInsets={false}
+        keyboardDismissMode="onDrag"
+        keyboardShouldPersistTaps={true}
+        showsVerticalScrollIndicator={false} />
     );
   }
 });
 
 var styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 15,
+    marginTop: 50,
+  },
+  wrapper: {
+    height: 60,
+    marginTop: 10,
+  },
+  reloader: {
+    flex: 1,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  loading: {
+    height: 60,
+  },
   addNew: {
     height: 20,
     color: '#ffffff',

@@ -8,12 +8,14 @@ var React = require('react-native');
 var Loader = require('./components/Loader');
 var MovieList = require('./components/MovieList');
 var Notification = require('./components/Notification');
+var NewMovie = require('./components/NewMovie');
 
 var {
   Animation,
   AppRegistry,
   NavigatorIOS,
   StyleSheet,
+  Text,
   View,
 } = React;
 
@@ -22,7 +24,8 @@ var moviesNative = React.createClass({
     return {
       message: '',
       icon: '',
-      style: 'notification'
+      style: 'notification',
+      showAdd: true
     }
   },
 
@@ -42,16 +45,29 @@ var moviesNative = React.createClass({
     }, 1000);
   },
 
+  addNewMovie: function () {
+    this.refs.nav.push({
+      title: 'Add new movie',
+      component: NewMovie,
+      passProps: {
+        animate: this.props.animate
+      }
+    });
+  },
+
   render: function() {
     return (
       <View style={styles.container}>
         <NavigatorIOS
+          ref="nav"
           style={styles.container}
           initialRoute={{
             title: 'Movies',
             component: MovieList,
+            rightButtonTitle: 'New',
+            onRightButtonPress: this.addNewMovie,
             passProps: {
-              animate: this.animate
+              animate: this.animate,
             }
           }} />
         <Notification ref="notification" {...this.state} />
@@ -60,11 +76,29 @@ var moviesNative = React.createClass({
   }
 });
 
+  //       <View style={styles.searchAdd}>
+  //         <Button clickFunction={this.addNewMovie} text="+ Add new"/>
+  //         <SearchBar
+  //           onSearchChange={this.onSearchChange}
+  //           isLoaded={this.state.isLoaded}
+  // r         onFocus={() => this.refs.listview.getScrollResponder().scrollTo(0, 0)}/>
+  //         {text}
+  //       </View>
+
 var styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative'
   },
+  addNew: {
+    position: 'absolute',
+    top: 20,
+    right: 10,
+    backgroundColor: 'transparent',
+    fontSize: 32,
+    fontWeight: '300',
+    color: '#5CACC4'
+  }
 });
 
 AppRegistry.registerComponent('moviesNative', () => moviesNative);
