@@ -43,9 +43,11 @@ module.exports = React.createClass({
               if (offsetY > height && !hasHeight) {
                 hasHeight = true;
                 Animation.startAnimation(this.refs.scrollTitle, 500, 0, 'easeInOut', { opacity: 1 });
-              } else if (offsetY < height) {
+                this.props.hideSearchIcon(0);
+              } else if (offsetY < height && hasHeight) {
                 hasHeight = false;
                 Animation.startAnimation(this.refs.scrollTitle, 500, 0, 'easeInOut', { opacity: 0 });
+                this.props.hideSearchIcon(1);
               }
             }
           }}>

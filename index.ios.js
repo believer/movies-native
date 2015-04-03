@@ -48,7 +48,8 @@ var moviesNative = React.createClass({
       icon: '',
       style: 'notification',
       movies: [],
-      loading: true
+      loading: true,
+      showSearchIcon: true
     }
   },
 
@@ -140,6 +141,8 @@ var moviesNative = React.createClass({
       searchDisplayed = false;
       Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,-50] });
     }
+
+    this.setState({ showSearchIcon: !this.state.showSearchIcon });
   },
 
   onSearchChange: function(event: Object) {
@@ -153,6 +156,10 @@ var moviesNative = React.createClass({
     this.timeoutID = this.setTimeout(() => this.getMovies(filter), 500);
   },
 
+  hideSearchIcon(opacity: Number) {
+    Animation.startAnimation(this.refs.searchIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
+  },
+
   render: function() {
     if (this.state.loading) {
       return <Loader />
@@ -160,9 +167,11 @@ var moviesNative = React.createClass({
 
     var movies = this.state.movies.map((movie, i) => {
       return (
-        <Movie key={i} {...movie} getMovies={this.getMovies} />
+        <Movie key={i} {...movie} getMovies={this.getMovies} hideSearchIcon={this.hideSearchIcon} />
       );
     });
+
+    var image = this.state.showSearchIcon ? <Image source={require('image!search')} style={styles.searchButton}/> : <Image source={require('image!close')} style={styles.searchButton}/>;
 
     return (
       <View style={styles.container}>
@@ -172,8 +181,8 @@ var moviesNative = React.createClass({
         <View ref="search" style={styles.search}>
           <SearchBar onSearchChange={this.onSearchChange}/>
         </View>
-        <TouchableOpacity onPress={this.displaySearch}>
-          <Image source={require('image!search')} style={styles.searchButton}/>
+        <TouchableOpacity onPress={this.displaySearch} ref="searchIcon">
+          {image}
         </TouchableOpacity>
       </View>
     );
