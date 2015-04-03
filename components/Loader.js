@@ -12,7 +12,6 @@ module.exports = React.createClass({
       <View style={styles.container}>
         <ActivityIndicatorIOS
           style={styles.scrollSpinner}
-          color="#5CACC4"
           size="large" />
         <Text style={styles.loader}>
           Loading movies
@@ -30,10 +29,11 @@ var styles = StyleSheet.create({
     alignItems: 'center',
   },
   loader: {
+    backgroundColor: 'transparent',
+    color: '#666666',
     fontWeight: '300',
     fontSize: 21,
     marginTop: 10,
-    color: '#5CACC4',
     textAlign: 'center'
   },
   scrollSpinner: {

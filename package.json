@@ -9,6 +9,9 @@
     "alt": "^0.15.0",
     "react": "^0.13.1",
     "react-native": "^0.3.4",
+    "react-native-looped-carousel": "0.0.3",
+    "react-native-nested-styles": "^0.1.0",
+    "react-native-nested-stylesheet": "0.0.7",
     "react-timer-mixin": "^0.13.1"
   }
 }

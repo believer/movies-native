@@ -34,7 +34,8 @@
   // $ curl http://localhost:8081/index.ios.bundle -o main.jsbundle
   //
   // and uncomment the next following line
-  // jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+  //jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+    // curl http://localhost:8081/index.ios.bundle -o main.jsbundle
 
   RCTRootView *rootView = [[RCTRootView alloc] initWithBundleURL:jsCodeLocation
                                                       moduleName:@"moviesNative"
@@ -42,7 +43,7 @@
     
     // Show status bar when app has loaded
     [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:NO];
-
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [[UIViewController alloc] init];

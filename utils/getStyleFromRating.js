@@ -1,13 +1,20 @@
 var MAX_VALUE = 200;
 
-function getStyleFromRating (rating: number): { color: string } {
+function getStyleFromRating (rating: number, type: string): { color: string } {
   var standard = {
     color: '#333333',
-    fontSize: 20,
-    position: 'absolute',
-    top: 20,
-    right: 30,
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'right',
   };
+
+  if (!type) {
+    standard.position = 'absolute';
+    standard.top = 10;
+    standard.right = 20;
+    standard.fontSize = 20;
+  }
 
   if (!rating && rating < 0) { return standard; }
 

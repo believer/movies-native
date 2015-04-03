@@ -6,27 +6,58 @@
 
 var React = require('react-native');
 var Loader = require('./components/Loader');
-var MovieList = require('./components/MovieList');
+var Movie = require('./components/Movie');
 var Notification = require('./components/Notification');
 var NewMovie = require('./components/NewMovie');
+var SearchBar = require('./components/SearchBar');
+var Carousel = require('react-native-looped-carousel');
+var Dimensions = require('Dimensions');
+var {width, height} = Dimensions.get('window');
+var getStyleFromRating = require('./utils/getStyleFromRating');
+var NestedStyles = require('react-native-nested-styles');
+var TimerMixin = require('react-timer-mixin');
 
 var {
   Animation,
   AppRegistry,
-  NavigatorIOS,
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } = React;
 
+var REQUEST_URL = 'http://rickardlaurin.se:3000/movies';
+
+var resultsCache = {
+  dataForQuery: {},
+  nextPageNumberForQuery: {},
+  totalForQuery: {},
+};
+
+var LOADING = {};
+var searchDisplayed = false;
+
 var moviesNative = React.createClass({
+  mixins: [TimerMixin],
+
   getInitialState: function () {
     return {
       message: '',
       icon: '',
       style: 'notification',
-      showAdd: true
+      movies: [],
+      loading: true
     }
+  },
+
+  componentDidMount: function() {
+    this.getMovies('');
+  },
+
+  _urlForQueryAndPage: function(query: string, pageNumber: ?number): string {
+    return query ? REQUEST_URL + '?title=' + query + '&skip=' + pageNumber : REQUEST_URL
   },
 
   animate: function (message: string, type: string) {
@@ -45,60 +76,140 @@ var moviesNative = React.createClass({
     }, 1000);
   },
 
-  addNewMovie: function () {
-    this.refs.nav.push({
-      title: 'Add new movie',
-      component: NewMovie,
-      passProps: {
-        animate: this.props.animate
+  getMovies(query: String) {
+    this.timeoutID = null;
+    this.setState({filter: query});
+
+    var cachedResultsForQuery = resultsCache.dataForQuery[query];
+
+    if (cachedResultsForQuery) {
+      if (!LOADING[query]) {
+        this.setState({
+          dataSource: this.getDataSource(cachedResultsForQuery),
+          loading: true
+        });
+      } else {
+        this.setState({ loading: true });
       }
+      return;
+    }
+
+    LOADING[query] = true;
+    resultsCache.dataForQuery[query] = null;
+
+    this.setState({
+      loading: true,
+      queryNumber: this.state.queryNumber + 1,
     });
+
+    fetch(this._urlForQueryAndPage(query))
+      .then((response) => response.json())
+      .catch((error) => {
+        LOADING[query] = false;
+        resultsCache.dataForQuery[query] = undefined;
+
+        this.setState({
+          movies: [],
+          loading: false,
+        });
+      })
+      .then((responseData) => {
+        LOADING[query] = false;
+        resultsCache.totalForQuery[query] = responseData.resultCount;
+        resultsCache.dataForQuery[query] = responseData.results;
+        resultsCache.nextPageNumberForQuery[query] = 2;
+
+        if (this.state.filter !== query) {
+          // do not update state if the query is stale
+          return;
+        }
+
+        this.setState({
+          loading: false,
+          movies: responseData.results,
+        });
+      })
+      .done();
+  },
+
+  displaySearch() {
+    if (!searchDisplayed) {
+      searchDisplayed = true;
+      Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,35] });
+    } else {
+      searchDisplayed = false;
+      Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,-50] });
+    }
+  },
+
+  onSearchChange: function(event: Object) {
+    var filter = event.nativeEvent.text.toLowerCase();
+
+    if (!filter) { return; }
+    
+    searchDisplayed = false;
+
+    this.clearTimeout(this.timeoutID);
+    this.timeoutID = this.setTimeout(() => this.getMovies(filter), 500);
   },
 
   render: function() {
+    if (this.state.loading) {
+      return <Loader />
+    }
+
+    var movies = this.state.movies.map((movie, i) => {
+      return (
+        <Movie key={i} {...movie} getMovies={this.getMovies} />
+      );
+    });
+
     return (
       <View style={styles.container}>
-        <NavigatorIOS
-          ref="nav"
-          style={styles.container}
-          initialRoute={{
-            title: 'Movies',
-            component: MovieList,
-            rightButtonTitle: 'New',
-            onRightButtonPress: this.addNewMovie,
-            passProps: {
-              animate: this.animate,
-            }
-          }} />
-        <Notification ref="notification" {...this.state} />
+        <Carousel delay={999999999999999999999}>
+          {movies}
+        </Carousel>
+        <View ref="search" style={styles.search}>
+          <SearchBar onSearchChange={this.onSearchChange}/>
+        </View>
+        <TouchableOpacity onPress={this.displaySearch}>
+          <Image source={require('image!search')} style={styles.searchButton}/>
+        </TouchableOpacity>
       </View>
     );
   }
 });
 
-  //       <View style={styles.searchAdd}>
-  //         <Button clickFunction={this.addNewMovie} text="+ Add new"/>
-  //         <SearchBar
-  //           onSearchChange={this.onSearchChange}
-  //           isLoaded={this.state.isLoaded}
-  // r         onFocus={() => this.refs.listview.getScrollResponder().scrollTo(0, 0)}/>
-  //         {text}
-  //       </View>
-
-var styles = StyleSheet.create({
+var styles = NestedStyles.create({
   container: {
     flex: 1,
+    width: width,
+    height: height,
     position: 'relative'
   },
-  addNew: {
+  search: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    opacity: 1,
+    flex: 1,
+    padding: 20,
+    paddingTop: 40,
+    left: 0,
+    top: -height,
     position: 'absolute',
-    top: 20,
-    right: 10,
+    width: width
+  },
+  searchText: {
     backgroundColor: 'transparent',
-    fontSize: 32,
-    fontWeight: '300',
-    color: '#5CACC4'
-  }
+    color: '#ffffff'
+  },
+  searchButton: {
+    position: 'absolute',
+    top: 35,
+    right: 10,
+    width: 20,
+    height: 20
+  },
 });
 
 AppRegistry.registerComponent('moviesNative', () => moviesNative);
+

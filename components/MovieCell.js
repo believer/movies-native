@@ -55,7 +55,8 @@ module.exports = React.createClass({
 
 var styles = StyleSheet.create({
   movie: {
-    marginTop: 15
+    marginTop: 15,
+    width: 100
   },
   rating: {
     color: '#ffffff',
@@ -63,7 +64,9 @@ var styles = StyleSheet.create({
   },
   thumbnail: {
     borderRadius: 5,
-    width: 290,
-    height: 435,
+    width: 100,
+    height: 150
+    // width: 290,
+    // height: 435,
   },
 });

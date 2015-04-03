@@ -2,8 +2,12 @@
 
 var React = require('react-native');
 var getStyleFromRating = require('../utils/getStyleFromRating');
+var Dimensions = require('Dimensions');
+var {width, height} = Dimensions.get('window');
 
 var {
+  ActivityIndicatorIOS,
+  Animation,
   AppRegistry,
   Image,
   ListView,
@@ -15,60 +19,159 @@ var {
   View,
 } = React;
 
+var PULLDOWN_DISTANCE = 100;
+var hasHeight = false;
+
 module.exports = React.createClass({
-  render: function() {
-    var poster = 'http://image.tmdb.org/t/p/w500' + this.props.movie.poster;
+  render() {
+    var poster = 'http://image.tmdb.org/t/p/w500' + this.props.poster;
+    var cast = this.props.cast.map((actor, i) => {
+      return <Text key={i} style={styles.actor}>{actor}</Text>
+    });
+
     return (
-      <ScrollView style={styles.movie}>
-        <Image
-          source={{uri: poster}}
-          style={styles.thumbnail} />
-          <View style={styles.content}>
-            <Text style={styles.title}>{this.props.movie.title}</Text>
-            <Text style={styles.year}>{this.props.movie.year}</Text>
-            <Text style={styles.desc}>{this.props.movie.desc}</Text>
-            <Text style={getStyleFromRating(this.props.movie.rating)}>{this.props.movie.rating}</Text>
+      <View style={{flex:1}}>
+        <ScrollView
+          style={styles.container}
+          scrollEventThrottle={200}
+          onScroll={(e) => {
+            var offsetY = e.nativeEvent.contentOffset.y;
+
+            if (offsetY < -PULLDOWN_DISTANCE) {
+              this.props.getMovies()
+            } else {
+              if (offsetY > height && !hasHeight) {
+                hasHeight = true;
+                Animation.startAnimation(this.refs.scrollTitle, 500, 0, 'easeInOut', { opacity: 1 });
+              } else if (offsetY < height) {
+                hasHeight = false;
+                Animation.startAnimation(this.refs.scrollTitle, 500, 0, 'easeInOut', { opacity: 0 });
+              }
+            }
+          }}>
+          <View style={styles.movie}>
+            <Image
+              source={{uri: poster}}
+              style={styles.thumbnail} />
+              <View ref="info" style={styles.preinfo}>
+                <Text style={styles.title}>{this.props.title}</Text>
+                <Text style={styles.year}>{this.props.year}</Text>
+                <Text style={getStyleFromRating(this.props.rating)}>{this.props.rating}</Text>
+              </View>
           </View>
-      </ScrollView>
+          <View style={[styles.content, styles.transparent]}>
+            <Text style={styles.director}>
+              <Text style={styles.bold}>Directed by: </Text>
+              {this.props.director ? this.props.director : '-'}
+            </Text>
+            <Text style={styles.desc}>{this.props.desc}</Text>
+            <View style={styles.cast}>
+              <Text style={styles.h2}>Cast</Text>
+              {cast}
+            </View>
+          </View>
+        </ScrollView>
+        <View ref="scrollTitle" style={[styles.preinfo, styles.scrollTitle]}>
+          <Text style={styles.white}>{this.props.title}</Text>
+          <Text style={[getStyleFromRating(this.props.rating, 'scroll')]}>{this.props.rating}</Text>
+        </View>
+      </View>
     );
   }
 });
 
 var styles = StyleSheet.create({
   container: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    position: 'relative'
+  },
+  movie: {
+    position: 'relative'
+  },
+  bold: {
+    fontWeight: '700'
+  },
+  white: {
+    color: '#ffffff',
+    fontWeight: '700',
+    width: 300,
+    flex: 4
+  },
+  transparent: {
+    backgroundColor: 'transparent'
+  },
+  preinfo: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 20,
+    paddingTop: 10,
+    bottom: 0,
+    position: 'absolute',
+    left: 0,
+    width: width
   },
   content: {
-    padding: 20,
+    padding: 40,
     position: 'relative'
+  },
+  scrollTitle: {
+    backgroundColor: 'rgba(0,0,0,1)',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    padding: 20,
+    paddingLeft: 40,
+    paddingTop: 30,
+    opacity: 0,
+    width: width,
+    height: 40,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems:'center',
+    flexWrap: 'nowrap',
+    flexDirection: 'row'
   },
   desc: {
     lineHeight: 22,
-    width: 280
   },
-  rating: {
-    color: '#1abc9c',
-    fontSize: 20,
-    position: 'absolute',
-    top: 20,
-    right: 30,
+  director: {
+    marginBottom: 10
+  },
+  actor: {
+    marginBottom: 5
   },
   title: {
-    fontSize: 22,
-    fontWeight: '200',
+    backgroundColor: 'transparent',
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '300',
     width: 250
   },
+  h2: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 10,
+    marginTop: 10
+  },
   thumbnail: {
-    width: 320,
-    height: 300,
+    width: width,
+    height: height,
   },
   year: {
+    backgroundColor: 'transparent',
     color: '#666666',
     fontSize: 12,
-    marginBottom: 10,
+    fontWeight: '700'
+  },
+  wrapper: {
+    height: 60,
+    marginTop: 10,
+  },
+  reloader: {
+    flex: 1,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  loading: {
+    height: 60,
   },
 });
