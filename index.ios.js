@@ -28,7 +28,7 @@ var {
   View,
 } = React;
 
-var REQUEST_URL = 'http://rickardlaurin.se:3000/movies';
+var REQUEST_URL = 'http://rickardlaurin.se:3000/movies?limit=10';
 
 var resultsCache = {
   dataForQuery: {},
@@ -49,16 +49,16 @@ var moviesNative = React.createClass({
       style: 'notification',
       movies: [],
       loading: true,
-      showSearchIcon: true
+      showSearchIcon: true,
     }
   },
 
   componentDidMount: function() {
-    this.getMovies('');
+    this.getMovies('', 0);
   },
 
   _urlForQueryAndPage: function(query: string, pageNumber: ?number): string {
-    return query ? REQUEST_URL + '?title=' + query + '&skip=' + pageNumber : REQUEST_URL
+    return query ? REQUEST_URL + '?title=' + query + '&skip=' + pageNumber : REQUEST_URL + '&skip=' + pageNumber
   },
 
   animate: function (message: string, type: string) {
@@ -77,16 +77,16 @@ var moviesNative = React.createClass({
     }, 1000);
   },
 
-  getMovies(query: String) {
+  getMovies(query: String, skip: Number) {
     this.timeoutID = null;
     this.setState({filter: query});
 
     var cachedResultsForQuery = resultsCache.dataForQuery[query];
 
-    if (cachedResultsForQuery) {
+    if (!skip && cachedResultsForQuery) {
       if (!LOADING[query]) {
         this.setState({
-          dataSource: this.getDataSource(cachedResultsForQuery),
+          dataSource: cachedResultsForQuery,
           loading: true
         });
       } else {
@@ -99,11 +99,15 @@ var moviesNative = React.createClass({
     resultsCache.dataForQuery[query] = null;
 
     this.setState({
-      loading: true,
+      loading: !skip ? true : false,
       queryNumber: this.state.queryNumber + 1,
     });
 
-    fetch(this._urlForQueryAndPage(query))
+    if (this.state.skipped === skip) {
+      return;
+    }
+
+    fetch(this._urlForQueryAndPage(query, skip))
       .then((response) => response.json())
       .catch((error) => {
         LOADING[query] = false;
@@ -127,7 +131,8 @@ var moviesNative = React.createClass({
 
         this.setState({
           loading: false,
-          movies: responseData.results,
+          skipped: skip ? skip : 0,
+          movies: skip ? this.state.movies.concat(responseData.results) : responseData.results
         });
       })
       .done();
@@ -175,7 +180,7 @@ var moviesNative = React.createClass({
 
     return (
       <View style={styles.container}>
-        <Carousel delay={999999999999999999999}>
+        <Carousel getMovies={this.getMovies} skipped={this.state.skipped} delay={999999999999999999999}>
           {movies}
         </Carousel>
         <View ref="search" style={styles.search}>

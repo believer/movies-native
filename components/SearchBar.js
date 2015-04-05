@@ -30,7 +30,6 @@ var styles = StyleSheet.create({
     borderColor: '#aaaaaa',
     borderWidth: 1,
     borderRadius: 3,
-    color: '#CCCCCC',
     padding: 3,
     paddingLeft: 8,
     flexDirection: 'row',
