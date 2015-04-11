@@ -1,4 +1,6 @@
 var React = require('react-native');
+var Dimensions = require('Dimensions');
+var {width, height} = Dimensions.get('window');
 
 var {
   StyleSheet,
@@ -26,20 +28,30 @@ module.exports = React.createClass({
 
 var styles = StyleSheet.create({
   searchBar: {
-    backgroundColor: 'rgba(240,240,240,0.8)',
-    borderColor: '#aaaaaa',
-    borderWidth: 1,
-    borderRadius: 3,
-    padding: 3,
-    paddingLeft: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: 250
+    backgroundColor: '#444f5a',
+    padding: 15,
+    paddingTop: 30,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 200,
+    width: width,
+  },
+  error: {
+    textAlign: 'center',
+    padding: 5,
+    color: '#ffffff'
   },
   searchBarInput: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+    borderRadius: 3,
+    borderWidth: 1,
     fontSize: 15,
     flex: 1,
-    height: 30,
-    width: 200
-  }
+    marginTop: 10,
+    height: 40,
+    padding: 3,
+    paddingLeft: 8,
+  },
 });

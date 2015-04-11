@@ -30,7 +30,7 @@ module.exports = React.createClass({
     });
 
     return (
-      <View style={{flex:1}}>
+      <View style={{flex:1, backgroundColor: '#ffffff'}}>
         <ScrollView
           style={styles.container}
           scrollEventThrottle={200}
@@ -124,7 +124,7 @@ var styles = StyleSheet.create({
     paddingTop: 30,
     opacity: 0,
     width: width,
-    height: 40,
+    height: 80,
     flex: 1,
     justifyContent: 'center',
     alignItems:'center',

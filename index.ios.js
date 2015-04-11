@@ -75,11 +75,17 @@ var moviesNative = React.createClass({
     }, 1000);
   },
 
-  addNew: function () {
+  addNew: function (type) {
     var position = [160, 480];
 
     if (this.state.mainViewOpen) {
       position = [160, 284];
+    }
+
+    if (!this.state.mainViewOpen) {
+      this.setState({
+        showType: type
+      });
     }
 
     this.setState({
@@ -151,18 +157,6 @@ var moviesNative = React.createClass({
       .done();
   },
 
-  displaySearch() {
-    if (!searchDisplayed) {
-      searchDisplayed = true;
-      Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,35] });
-    } else {
-      searchDisplayed = false;
-      Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,-50] });
-    }
-
-    this.setState({ showSearchIcon: !this.state.showSearchIcon });
-  },
-
   onSearchChange: function(event: Object) {
     var filter = event.nativeEvent.text.toLowerCase();
 
@@ -176,6 +170,8 @@ var moviesNative = React.createClass({
 
   hideSearchIcon(opacity: Number) {
     Animation.startAnimation(this.refs.searchIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
+
+    Animation.startAnimation(this.refs.addIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
   },
 
   render: function() {
@@ -197,25 +193,23 @@ var moviesNative = React.createClass({
 
     var image = this.state.showSearchIcon ? <Image source={require('image!search')} style={styles.searchButton}/> : <Image source={require('image!close')} style={styles.searchButton}/>;
 
+    var subfunction = this.state.showType === 'add' ? <NewMovie addNew={this.addNew} /> : <SearchBar onSearchChange={this.onSearchChange} />;
+
     return (
       <View style={styles.container}>
-        <NewMovie addNew={this.addNew} />
+        {subfunction}
 
         <View ref="mainView" style={styles.mainView}>
           <Carousel getMovies={this.getMovies} skipped={this.state.skipped} delay={999999999999999999999}>
             {movies}
           </Carousel>
 
-          <TouchableOpacity onPress={this.addNew}>
+          <TouchableOpacity onPress={this.addNew.bind(this, 'add')} ref="addIcon">
             <Image source={require('image!plus')} style={styles.menuBtn} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={this.displaySearch} ref="searchIcon">
+          <TouchableOpacity onPress={this.addNew.bind(this, '')} ref="searchIcon">
             {image}
           </TouchableOpacity>
-        </View>
-
-        <View ref="search" style={styles.search}>
-          <SearchBar onSearchChange={this.onSearchChange}/>
         </View>
       </View>
     );

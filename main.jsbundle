@@ -930,24 +930,21 @@ Object.assign = function(target, sources) {
   setupErrorGuard();
 })(this);
 
-__d('moviesNative/index.ios',["react-native/Libraries/react-native/react-native","moviesNative/components/Loader","moviesNative/components/Movie","moviesNative/components/Notification","moviesNative/components/NewMovie","moviesNative/components/SearchBar","react-native-looped-carousel/index","Dimensions","moviesNative/utils/getStyleFromRating","react-native-nested-styles/index","react-timer-mixin/TimerMixin","image!search","image!close"],function(global, require, requireDynamic, requireLazy, module, exports) {  /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- */
-'use strict';
+__d('moviesNative/index.ios',["react-native/Libraries/react-native/react-native","moviesNative/components/Loader","moviesNative/components/Movie","moviesNative/components/Notification","moviesNative/components/NewMovie","moviesNative/components/SearchBar","moviesNative/components/NewMovie","react-native-looped-carousel/index","Dimensions","moviesNative/utils/getStyleFromRating","react-native-nested-styles/index","react-timer-mixin/TimerMixin","image!search","image!close","image!plus"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
 
-var React = require('react-native/Libraries/react-native/react-native');
-var Loader = require('moviesNative/components/Loader');
-var Movie = require('moviesNative/components/Movie');
-var Notification = require('moviesNative/components/Notification');
-var NewMovie = require('moviesNative/components/NewMovie');
-var SearchBar = require('moviesNative/components/SearchBar');
-var Carousel = require('react-native-looped-carousel/index');
-var Dimensions = require('Dimensions');
-var $__0=   Dimensions.get('window'),width=$__0.width,height=$__0.height;
+var React              = require('react-native/Libraries/react-native/react-native');
+var Loader             = require('moviesNative/components/Loader');
+var Movie              = require('moviesNative/components/Movie');
+var Notification       = require('moviesNative/components/Notification');
+var NewMovie           = require('moviesNative/components/NewMovie');
+var SearchBar          = require('moviesNative/components/SearchBar');
+var NewMovie            = require('moviesNative/components/NewMovie');
+var Carousel           = require('react-native-looped-carousel/index');
+var Dimensions         = require('Dimensions');
+var $__0=      Dimensions.get('window'),width=$__0.width,height=$__0.height;
 var getStyleFromRating = require('moviesNative/utils/getStyleFromRating');
-var NestedStyles = require('react-native-nested-styles/index');
-var TimerMixin = require('react-timer-mixin/TimerMixin');
+var NestedStyles       = require('react-native-nested-styles/index');
+var TimerMixin         = require('react-timer-mixin/TimerMixin');
 
 var $__1=
   
@@ -976,12 +973,13 @@ var moviesNative = React.createClass({displayName: "moviesNative",
 
   getInitialState: function () {
     return {
-      message: '',
-      icon: '',
+      message: 'test',
+      icon: 'test',
       style: 'notification',
       movies: [],
       loading: true,
       showSearchIcon: true,
+      mainViewOpen: false
     }
   },
 
@@ -1007,6 +1005,27 @@ var moviesNative = React.createClass({displayName: "moviesNative",
     setTimeout(function()  {
       Animation.startAnimation(this.refs.notification, 150, 0, 'easeInOutQuad', { opacity: 0 });
     }.bind(this), 1000);
+  },
+
+  addNew: function (type) {
+    var position = [160, 480];
+
+    if (this.state.mainViewOpen) {
+      position = [160, 284];
+    }
+
+    if (!this.state.mainViewOpen) {
+      this.setState({
+        showType: type
+      });
+    }
+
+    this.setState({
+      mainViewOpen: !this.state.mainViewOpen
+    });
+
+
+    Animation.startAnimation(this.refs.mainView, 250, 0, 'easeInOutQuad', {position: position });
   },
 
   getMovies:function(query        , skip        ) {
@@ -1070,18 +1089,6 @@ var moviesNative = React.createClass({displayName: "moviesNative",
       .done();
   },
 
-  displaySearch:function() {
-    if (!searchDisplayed) {
-      searchDisplayed = true;
-      Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,35] });
-    } else {
-      searchDisplayed = false;
-      Animation.startAnimation(this.refs.search, 250, 0, 'easeInOutQuad', { position: [160,-50] });
-    }
-
-    this.setState({ showSearchIcon: !this.state.showSearchIcon });
-  },
-
   onSearchChange: function(event        ) {
     var filter = event.nativeEvent.text.toLowerCase();
 
@@ -1095,6 +1102,8 @@ var moviesNative = React.createClass({displayName: "moviesNative",
 
   hideSearchIcon:function(opacity        ) {
     Animation.startAnimation(this.refs.searchIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
+
+    Animation.startAnimation(this.refs.addIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
   },
 
   render: function() {
@@ -1108,18 +1117,31 @@ var moviesNative = React.createClass({displayName: "moviesNative",
       );
     }.bind(this));
 
+    var notification = {
+      icon: this.state.icon,
+      message: this.state.message,
+      style: this.state.notification
+    };
+
     var image = this.state.showSearchIcon ? React.createElement(Image, {source: require('image!search'), style: styles.searchButton}) : React.createElement(Image, {source: require('image!close'), style: styles.searchButton});
+
+    var subfunction = this.state.showType === 'add' ? React.createElement(NewMovie, {addNew: this.addNew}) : React.createElement(SearchBar, {onSearchChange: this.onSearchChange});
 
     return (
       React.createElement(View, {style: styles.container}, 
-        React.createElement(Carousel, {getMovies: this.getMovies, skipped: this.state.skipped, delay: 999999999999999999999}, 
-          movies
-        ), 
-        React.createElement(View, {ref: "search", style: styles.search}, 
-          React.createElement(SearchBar, {onSearchChange: this.onSearchChange})
-        ), 
-        React.createElement(TouchableOpacity, {onPress: this.displaySearch, ref: "searchIcon"}, 
-          image
+        subfunction, 
+
+        React.createElement(View, {ref: "mainView", style: styles.mainView}, 
+          React.createElement(Carousel, {getMovies: this.getMovies, skipped: this.state.skipped, delay: 999999999999999999999}, 
+            movies
+          ), 
+
+          React.createElement(TouchableOpacity, {onPress: this.addNew.bind(this, 'add'), ref: "addIcon"}, 
+            React.createElement(Image, {source: require('image!plus'), style: styles.menuBtn})
+          ), 
+          React.createElement(TouchableOpacity, {onPress: this.addNew.bind(this, ''), ref: "searchIcon"}, 
+            image
+          )
         )
       )
     );
@@ -1128,21 +1150,39 @@ var moviesNative = React.createClass({displayName: "moviesNative",
 
 var styles = NestedStyles.create({
   container: {
-    flex: 1,
     width: width,
     height: height,
-    position: 'relative'
+    position: 'relative',
+    mainView: {}
+  },
+  sidebar: {
+    backgroundColor: '#444f5a',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: height,
+    width: 290,
+    borderRightColor: '#2d353e',
+    borderRightWidth: 2,
+    paddingTop: 64
   },
   search: {
     backgroundColor: 'rgba(0,0,0,0.7)',
     opacity: 1,
     flex: 1,
-    padding: 20,
+    padding: 0,
     paddingTop: 40,
     left: 0,
     top: -height,
     position: 'absolute',
     width: width
+  },
+  menuBtn: {
+    position: 'absolute',
+    top: 25,
+    left: 15,
+    width: 30,
+    height: 30
   },
   searchText: {
     backgroundColor: 'transparent',
@@ -1151,7 +1191,7 @@ var styles = NestedStyles.create({
   searchButton: {
     position: 'absolute',
     top: 35,
-    right: 10,
+    right: 15,
     width: 20,
     height: 20
   },
@@ -39035,7 +39075,7 @@ module.exports = React.createClass({displayName: "exports",
     });
 
     return (
-      React.createElement(View, {style: {flex:1}}, 
+      React.createElement(View, {style: {flex:1, backgroundColor: '#ffffff'}}, 
         React.createElement(ScrollView, {
           style: styles.container, 
           scrollEventThrottle: 200, 
@@ -39129,7 +39169,7 @@ var styles = StyleSheet.create({
     paddingTop: 30,
     opacity: 0,
     width: width,
-    height: 40,
+    height: 80,
     flex: 1,
     justifyContent: 'center',
     alignItems:'center',
@@ -39217,10 +39257,11 @@ function getStyleFromRating (rating        , type        )                    {
 }
 
 module.exports = getStyleFromRating;});
-__d('moviesNative/components/Notification',["react-native/Libraries/react-native/react-native","moviesNative/stores/NotificationStore"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
+__d('moviesNative/components/Notification',["react-native/Libraries/react-native/react-native","moviesNative/stores/NotificationStore","react-native-nested-styles/index"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
 
 var React = require('react-native/Libraries/react-native/react-native');
 var NotificationStore = require('moviesNative/stores/NotificationStore');
+var NestedStyles       = require('react-native-nested-styles/index');
 
 var $__0=
   
@@ -39230,6 +39271,12 @@ var $__0=
   React,Animation=$__0.Animation,StyleSheet=$__0.StyleSheet,Text=$__0.Text,View=$__0.View;
 
 module.exports = React.createClass({displayName: "exports",
+  propTypes: {
+    style: React.PropTypes.string,
+    icon: React.PropTypes.string.isRequired,
+    message: React.PropTypes.string.isRequired
+  },
+
   render: function () {
     return (
       React.createElement(View, {style: styles[this.props.style]}, 
@@ -39239,7 +39286,7 @@ module.exports = React.createClass({displayName: "exports",
   }
 });
 
-var styles = StyleSheet.create({
+var styles = NestedStyles.create({
   notification: {
     backgroundColor: '#333333',
     width: 320,
@@ -39251,7 +39298,7 @@ var styles = StyleSheet.create({
     left: 0,
     top: 0,
     flex: 1,
-    opacity: 0,
+    opacity: 1,
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -39275,344 +39322,6 @@ var styles = StyleSheet.create({
   }
 });});
 __d('moviesNative/stores/NotificationStore',[],function(global, require, requireDynamic, requireLazy, module, exports) {  });
-__d('moviesNative/components/NewMovie',["react-native/Libraries/react-native/react-native","moviesNative/components/Button"],function(global, require, requireDynamic, requireLazy, module, exports) {  var React = require('react-native/Libraries/react-native/react-native');
-var Button = require('moviesNative/components/Button');
-
-var $__0=
-  
-  
-  
-  
-  
-  React,StyleSheet=$__0.StyleSheet,Text=$__0.Text,TextInput=$__0.TextInput,TouchableHighlight=$__0.TouchableHighlight,View=$__0.View;
-
-var REQUEST_URL = 'http://rickardlaurin.se:3000/tmdb';
-
-module.exports = React.createClass({displayName: "exports",
-  getInitialState: function () {
-    return {
-      addedNew: false,
-      error: ''
-    }
-  },
-  addNewMovie: function () {
-    if (!this.state.id) {
-      this.setState({
-        error: 'No IMDb ID'
-      });
-
-      return;
-    }
-
-    if (!this.state.rating) {
-       this.setState({
-        error: 'No rating'
-      });
-
-      return;     
-    }
-
-    var self = this;
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', REQUEST_URL, true);
-    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xhr.onload = function () {
-      self.props.animate('Added new movie', 'success');
-    };
-
-    xhr.send('imdbid=' + this.state.id + '&rating=' + this.state.rating);
-  },
-
-  setIMDbID: function (event        ) {
-    this.setState({ id: event.nativeEvent.text });
-  },
-
-  setRating: function (event        ) {
-    this.setState({ rating: event.nativeEvent.text });
-  },
-
-  render: function () {
-    return (
-      React.createElement(View, {style: styles.searchBar}, 
-        React.createElement(TextInput, {
-          ref: "imdbid", 
-          placeholder: "IMDb ID", 
-          onChange: this.setIMDbID, 
-          style: styles.searchBarInput}), 
-        React.createElement(TextInput, {
-          ref: "rating", 
-          placeholder: "Rating", 
-          onChange: this.setRating, 
-          style: styles.searchBarInput, 
-          keyboardType: "numeric"}), 
-        React.createElement(Text, null, this.state.error), 
-        React.createElement(Button, {clickFunction: this.addNewMovie, text: "Add new movie"})
-      )
-    );
-  }
-})
-
-var styles = StyleSheet.create({
-  searchBar: {
-    backgroundColor: '#ffffff',
-    color: '#666666',
-    marginTop: 64,
-    marginBottom: 10,
-    padding: 15,
-    alignItems: 'center',
-  },
-  searchBarInput: {
-    borderColor: '#5CACC4',
-    borderRadius: 3,
-    borderWidth: 1,
-    fontSize: 15,
-    flex: 1,
-    marginTop: 10,
-    height: 40,
-    padding: 3,
-    paddingLeft: 8,
-  },
-  button: {
-    flex: 1
-  }
-});
-});
-__d('moviesNative/components/Button',["react-native/Libraries/react-native/react-native"],function(global, require, requireDynamic, requireLazy, module, exports) {  var React  = require('react-native/Libraries/react-native/react-native');
-
-var $__0=
-  
-  
-  
-  
-  React,StyleSheet=$__0.StyleSheet,Text=$__0.Text,TouchableOpacity=$__0.TouchableOpacity,View=$__0.View;
-
-module.exports = React.createClass({displayName: "exports",
-  render: function () {
-    return (
-      React.createElement(TouchableOpacity, {
-        activeOpacity: 0.8, 
-        onPress: this.props.clickFunction}, 
-        React.createElement(View, {style: styles.button}, 
-          React.createElement(Text, {style: styles.buttonText}, 
-            this.props.text
-          )
-        )
-      )
-    );
-  }
-});
-
-var styles = StyleSheet.create({
-  button: {
-    borderRadius: 3,
-    height: 20,
-    color: '#ffffff',
-    backgroundColor: '#5CACC4',
-    width: 290,
-    marginBottom: 10,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontWeight: '900',
-    color: '#ffffff'
-  }
-});
-});
-__d('moviesNative/components/SearchBar',["react-native/Libraries/react-native/react-native"],function(global, require, requireDynamic, requireLazy, module, exports) {  var React = require('react-native/Libraries/react-native/react-native');
-
-var $__0=
-  
-  
-  
-  
-  React,StyleSheet=$__0.StyleSheet,Text=$__0.Text,TextInput=$__0.TextInput,View=$__0.View;
-
-module.exports = React.createClass({displayName: "exports",
-  render: function() {
-    return (
-      React.createElement(View, {style: styles.searchBar}, 
-        React.createElement(TextInput, {
-          autoCapitalize: "none", 
-          autoCorrect: false, 
-          clearButtonMode: "while-editing", 
-          onChange: this.props.onSearchChange, 
-          placeholder: "Search a movie...", 
-          onFocus: this.props.onFocus, 
-          style: styles.searchBarInput})
-      )
-    );
-  }
-});
-
-var styles = StyleSheet.create({
-  searchBar: {
-    backgroundColor: 'rgba(240,240,240,0.8)',
-    borderColor: '#aaaaaa',
-    borderWidth: 1,
-    borderRadius: 3,
-    padding: 3,
-    paddingLeft: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: 250
-  },
-  searchBarInput: {
-    fontSize: 15,
-    flex: 1,
-    height: 30,
-    width: 200
-  }
-});
-});
-__d('react-native-looped-carousel/index',["react-native/Libraries/react-native/react-native","react-timer-mixin/TimerMixin","Dimensions"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
-
-var React = require('react-native/Libraries/react-native/react-native');
-var TimerMixin = require('react-timer-mixin/TimerMixin');
-var Dimensions = require('Dimensions');
-var $__0=   Dimensions.get('window'),width=$__0.width,height=$__0.height;
-
-var $__1=
-  
-  
-  
-  
-  
-  
-  React,AppRegistry=$__1.AppRegistry,StyleSheet=$__1.StyleSheet,Image=$__1.Image,Text=$__1.Text,ScrollView=$__1.ScrollView,View=$__1.View;
-
-
-var PAGE_CHANGE_DELAY = 4000;
-
-/**
- * Animates pages in cycle
- * (loop possible if children count > 1)
-*/
-var Carousel = React.createClass({displayName: "Carousel",
-    propTypes:{
-        children: React.PropTypes.node.isRequired,
-        delay: React.PropTypes.number,
-        style: View.propTypes.style
-    },
-    mixins: [TimerMixin],
-    getDefaultProps: function() {
-      return {delay: PAGE_CHANGE_DELAY};
-    },
-    getInitialState: function() {
-      var childrenCount = this.props.children.length;
-      return {
-        contentOffset: {x: childrenCount > 1 ? 0 : 0, y: 0},
-        currentPage: childrenCount > 1 ? 1 : 0,
-      };
-    },
-    componentDidMount:function () {
-
-      this._setUpTimer();
-    },
-    _onScrollBegin: function(event) {
-      clearTimeout(this.timer);
-    },
-    _onScrollEnd: function(event) {
-      this._setUpTimer();
-
-      var offset = event.nativeEvent.contentOffset;
-
-      var childrenCount = this.props.children.length;
-      if (offset.x == 0) {
-        return;
-        offset = {x: childrenCount*width, y: 0};
-      } else if (offset.x == (childrenCount+1)*width) {
-        offset = {x: width, y: 0};
-      }
-
-      this._calculateCurrentPage(offset.x);
-      this.setState({contentOffset: offset});
-    },
-    _setUpTimer: function() {
-      //only for cycling
-      if (this.props.children.length > 1) {
-        clearTimeout(this.timer);
-        this.timer = this.setTimeout(this._animateNextPage, this.props.delay);
-      }
-    },
-    _animateNextPage: function() {
-      var k = this.state.currentPage;
-      k++;
-
-      this.setState({currentPage: k});
-      this.refs.scrollView.scrollTo(0, k*width);
-      this._setUpTimer();
-    },
-    _calculateCurrentPage: function(offset) {
-      var page = Math.floor((offset - width/2) / width) + 1;
-      if (page % 9 === 0) {
-        this.props.getMovies('', this.props.skipped + 10);
-      }
-      this.setState({currentPage: page});
-    },
-    //TODO: add optional `dots` for displaying current page (like pageControl)
-    render: function() {
-      var pages = [];
-
-      var children = this.props.children;
-
-      //to make infinite pages structure like this is needed: 3-1-2-3-1
-      //add last one at the 1st place
-      if (children.length > 1) {
-        pages.push(children[children.length-1]);
-      }
-
-      //add all pages
-      for (var i=0; i<children.length; i++) {
-        pages.push(children[i]);
-      }
-
-      //add first one at the last place
-      // if (children.length > 1) {
-      //   pages.push(children[0]);
-      // }
-
-      pages = pages.map(function(page, i)  {
-        return React.createElement(View, {style: {width: width}, key: "page"+i}, page);
-      });
-
-      pages = pages.slice(1);
-
-      return (
-        React.createElement(ScrollView, {
-          ref: "scrollView", 
-          onScrollBeginDrag: this._onScrollBegin, 
-          onMomentumScrollEnd: this._onScrollEnd, 
-          alwaysBounceHorizontal: false, 
-          alwaysBounceVertical: false, 
-          showsHorizontalScrollIndicator: false, 
-          horizontal: true, 
-          pagingEnabled: true, 
-          bounces: true, 
-          contentOffset: this.state.contentOffset, 
-          contentContainerStyle: [
-            styles.horizontalScroll,
-            this.props.style,
-            {width: width*(this.props.children.length+(this.props.children.length>1?2:0))}
-          ]
-        }, 
-          pages
-        )
-      );
-    },
-});
-
-var styles = StyleSheet.create({
-  horizontalScroll: {
-    height: height,
-    position:'absolute'
-  }
-});
-
-module.exports = Carousel;
-});
 __d('react-native-nested-styles/index',["lodash/index","StyleSheetRegistry"],function(global, require, requireDynamic, requireLazy, module, exports) {  var _ = require('lodash/index');
 var StyleSheetRegistry = require('StyleSheetRegistry');
 
@@ -51471,7 +51180,358 @@ __d('lodash/index',[],function(global, require, requireDynamic, requireLazy, mod
   }
 }.call(this));
 });
+__d('moviesNative/components/NewMovie',["react-native/Libraries/react-native/react-native","moviesNative/components/Button","Dimensions"],function(global, require, requireDynamic, requireLazy, module, exports) {  var React = require('react-native/Libraries/react-native/react-native');
+var Button = require('moviesNative/components/Button');
+var Dimensions = require('Dimensions');
+var $__0=   Dimensions.get('window'),width=$__0.width,height=$__0.height;
+
+var $__1=
+  
+  
+  
+  
+  
+  React,StyleSheet=$__1.StyleSheet,Text=$__1.Text,TextInput=$__1.TextInput,TouchableHighlight=$__1.TouchableHighlight,View=$__1.View;
+
+var REQUEST_URL = 'http://rickardlaurin.se:3000/tmdb';
+
+module.exports = React.createClass({displayName: "exports",
+  getInitialState: function () {
+    return {
+      error: ''
+    }
+  },
+
+  addNewMovie: function () {
+    if (!this.state.id) {
+      this.setState({
+        error: 'No IMDb ID'
+      });
+
+      return;
+    }
+
+    if (!this.state.rating) {
+       this.setState({
+        error: 'No rating'
+      });
+
+      return;     
+    }
+
+    var self = this;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', REQUEST_URL, true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.onload = function () {
+      self.props.addNew();
+    };
+
+    xhr.send('imdbid=' + this.state.id + '&rating=' + this.state.rating);
+  },
+
+  setIMDbID: function (event        ) {
+    this.setState({ id: event.nativeEvent.text });
+  },
+
+  setRating: function (event        ) {
+    this.setState({ rating: event.nativeEvent.text });
+  },
+
+  render: function () {
+    return (
+      React.createElement(View, {style: styles.searchBar}, 
+        React.createElement(TextInput, {
+          ref: "imdbid", 
+          placeholder: "IMDb ID", 
+          onChange: this.setIMDbID, 
+          style: styles.searchBarInput}), 
+        React.createElement(TextInput, {
+          ref: "rating", 
+          placeholder: "Rating", 
+          onChange: this.setRating, 
+          style: styles.searchBarInput, 
+          keyboardType: "numeric"}), 
+        React.createElement(Text, {style: styles.error}, this.state.error), 
+        React.createElement(Button, {clickFunction: this.addNewMovie, text: "Add new movie"})
+      )
+    );
+  }
+})
+
+var styles = StyleSheet.create({
+  searchBar: {
+    backgroundColor: '#444f5a',
+    padding: 15,
+    paddingTop: 30,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 200,
+    width: width,
+  },
+  error: {
+    textAlign: 'center',
+    padding: 5,
+    color: '#ffffff'
+  },
+  searchBarInput: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+    borderRadius: 3,
+    borderWidth: 1,
+    fontSize: 15,
+    flex: 1,
+    marginTop: 10,
+    height: 40,
+    padding: 3,
+    paddingLeft: 8,
+  },
+});
+});
+__d('moviesNative/components/Button',["react-native/Libraries/react-native/react-native"],function(global, require, requireDynamic, requireLazy, module, exports) {  var React  = require('react-native/Libraries/react-native/react-native');
+
+var $__0=
+  
+  
+  
+  
+  React,StyleSheet=$__0.StyleSheet,Text=$__0.Text,TouchableOpacity=$__0.TouchableOpacity,View=$__0.View;
+
+module.exports = React.createClass({displayName: "exports",
+  render: function () {
+    return (
+      React.createElement(TouchableOpacity, {
+        activeOpacity: 0.8, 
+        onPress: this.props.clickFunction}, 
+        React.createElement(View, {style: styles.button}, 
+          React.createElement(Text, {style: styles.buttonText}, 
+            this.props.text
+          )
+        )
+      )
+    );
+  }
+});
+
+var styles = StyleSheet.create({
+  button: {
+    borderRadius: 3,
+    height: 20,
+    color: '#ffffff',
+    backgroundColor: '#5CACC4',
+    width: 290,
+    marginBottom: 10,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontWeight: '900',
+    color: '#ffffff'
+  }
+});
+});
+__d('moviesNative/components/SearchBar',["react-native/Libraries/react-native/react-native","Dimensions"],function(global, require, requireDynamic, requireLazy, module, exports) {  var React = require('react-native/Libraries/react-native/react-native');
+var Dimensions = require('Dimensions');
+var $__0=   Dimensions.get('window'),width=$__0.width,height=$__0.height;
+
+var $__1=
+  
+  
+  
+  
+  React,StyleSheet=$__1.StyleSheet,Text=$__1.Text,TextInput=$__1.TextInput,View=$__1.View;
+
+module.exports = React.createClass({displayName: "exports",
+  render: function() {
+    return (
+      React.createElement(View, {style: styles.searchBar}, 
+        React.createElement(TextInput, {
+          autoCapitalize: "none", 
+          autoCorrect: false, 
+          clearButtonMode: "while-editing", 
+          onChange: this.props.onSearchChange, 
+          placeholder: "Search a movie...", 
+          onFocus: this.props.onFocus, 
+          style: styles.searchBarInput})
+      )
+    );
+  }
+});
+
+var styles = StyleSheet.create({
+  searchBar: {
+    backgroundColor: '#444f5a',
+    padding: 15,
+    paddingTop: 30,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 200,
+    width: width,
+  },
+  error: {
+    textAlign: 'center',
+    padding: 5,
+    color: '#ffffff'
+  },
+  searchBarInput: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+    borderRadius: 3,
+    borderWidth: 1,
+    fontSize: 15,
+    flex: 1,
+    marginTop: 10,
+    height: 40,
+    padding: 3,
+    paddingLeft: 8,
+  },
+});
+});
+__d('react-native-looped-carousel/index',["react-native/Libraries/react-native/react-native","react-timer-mixin/TimerMixin","Dimensions"],function(global, require, requireDynamic, requireLazy, module, exports) {  'use strict';
+
+var React = require('react-native/Libraries/react-native/react-native');
+var TimerMixin = require('react-timer-mixin/TimerMixin');
+var Dimensions = require('Dimensions');
+var $__0=   Dimensions.get('window'),width=$__0.width,height=$__0.height;
+
+var $__1=
+  
+  
+  
+  
+  
+  
+  React,AppRegistry=$__1.AppRegistry,StyleSheet=$__1.StyleSheet,Image=$__1.Image,Text=$__1.Text,ScrollView=$__1.ScrollView,View=$__1.View;
+
+
+var PAGE_CHANGE_DELAY = 4000;
+
+/**
+ * Animates pages in cycle
+ * (loop possible if children count > 1)
+*/
+var Carousel = React.createClass({displayName: "Carousel",
+    propTypes:{
+        children: React.PropTypes.node.isRequired,
+        delay: React.PropTypes.number,
+        style: View.propTypes.style
+    },
+    mixins: [TimerMixin],
+    getDefaultProps: function() {
+      return {delay: PAGE_CHANGE_DELAY};
+    },
+    getInitialState: function() {
+      var childrenCount = this.props.children.length;
+      return {
+        contentOffset: {x: childrenCount > 1 ? width : 0, y: 0},
+        currentPage: childrenCount > 1 ? 1 : 0,
+      };
+    },
+    componentDidMount:function(){
+      this._setUpTimer();
+    },
+    _onScrollBegin: function(event) {
+      clearTimeout(this.timer);
+    },
+    _onScrollEnd: function(event) {
+      this._setUpTimer();
+
+      var offset = event.nativeEvent.contentOffset;
+
+      var childrenCount = this.props.children.length;
+      if (offset.x == 0) {
+        offset = {x: childrenCount*width, y: 0};
+      } else if (offset.x == (childrenCount+1)*width) {
+        offset = {x: width, y: 0};
+      }
+
+      this._calculateCurrentPage(offset.x);
+      this.setState({contentOffset: offset});
+    },
+    _setUpTimer: function() {
+      //only for cycling
+      if (this.props.children.length > 1) {
+        clearTimeout(this.timer);
+        this.timer = this.setTimeout(this._animateNextPage, this.props.delay);
+      }
+    },
+    _animateNextPage: function() {
+      var k = this.state.currentPage;
+      k++;
+
+      this.setState({currentPage: k});
+      this.refs.scrollView.scrollTo(0, k*width);
+      this._setUpTimer();
+    },
+    _calculateCurrentPage: function(offset) {
+      var page = Math.floor((offset - width/2) / width) + 1;
+      this.setState({currentPage: page});
+    },
+    //TODO: add optional `dots` for displaying current page (like pageControl)
+    render: function() {
+      var pages = [];
+
+      var children = this.props.children;
+
+      //to make infinite pages structure like this is needed: 3-1-2-3-1
+      //add last one at the 1st place
+      if (children.length > 1) {
+        pages.push(children[children.length-1]);
+      }
+
+      //add all pages
+      for (var i=0; i<children.length; i++) {
+        pages.push(children[i]);
+      }
+
+      //add first one at the last place
+      if (children.length > 1) {
+        pages.push(children[0]);
+      }
+
+      pages = pages.map(function(page, i)  {
+        return React.createElement(View, {style: {width: width}, key: "page"+i}, page);
+      });
+
+      return (
+        React.createElement(ScrollView, {
+          ref: "scrollView", 
+          onScrollBeginDrag: this._onScrollBegin, 
+          onMomentumScrollEnd: this._onScrollEnd, 
+          alwaysBounceHorizontal: false, 
+          alwaysBounceVertical: false, 
+          showsHorizontalScrollIndicator: false, 
+          horizontal: true, 
+          pagingEnabled: true, 
+          bounces: false, 
+          contentOffset: this.state.contentOffset, 
+          contentContainerStyle: [
+            styles.horizontalScroll,
+            this.props.style,
+            {width: width*(this.props.children.length+(this.props.children.length>1?2:0))}
+          ]
+        }, 
+          pages
+        )
+      );
+    },
+});
+
+var styles = StyleSheet.create({
+  horizontalScroll: {
+    height: height,
+    position:'absolute'
+  }
+});
+
+module.exports = Carousel;
+});
 __d('image!search',[],function(global, require, requireDynamic, requireLazy, module, exports) {  module.exports = {"uri":"search","isStatic":true};});
 __d('image!close',[],function(global, require, requireDynamic, requireLazy, module, exports) {  module.exports = {"uri":"close","isStatic":true};});
+__d('image!plus',[],function(global, require, requireDynamic, requireLazy, module, exports) {  module.exports = {"uri":"plus","isStatic":true};});
 ;require("moviesNative/index.ios");
 //@ sourceMappingURL=/index.ios.map
