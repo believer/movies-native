@@ -1,21 +1,18 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- */
 'use strict';
 
-var React = require('react-native');
-var Loader = require('./components/Loader');
-var Movie = require('./components/Movie');
-var Notification = require('./components/Notification');
-var NewMovie = require('./components/NewMovie');
-var SearchBar = require('./components/SearchBar');
-var Carousel = require('react-native-looped-carousel');
-var Dimensions = require('Dimensions');
-var {width, height} = Dimensions.get('window');
+var React              = require('react-native');
+var Loader             = require('./components/Loader');
+var Movie              = require('./components/Movie');
+var Notification       = require('./components/Notification');
+var NewMovie           = require('./components/NewMovie');
+var SearchBar          = require('./components/SearchBar');
+var NewMovie            = require('./components/NewMovie');
+var Carousel           = require('react-native-looped-carousel');
+var Dimensions         = require('Dimensions');
+var {width, height}    = Dimensions.get('window');
 var getStyleFromRating = require('./utils/getStyleFromRating');
-var NestedStyles = require('react-native-nested-styles');
-var TimerMixin = require('react-timer-mixin');
+var NestedStyles       = require('react-native-nested-styles');
+var TimerMixin         = require('react-timer-mixin');
 
 var {
   Animation,
@@ -44,12 +41,13 @@ var moviesNative = React.createClass({
 
   getInitialState: function () {
     return {
-      message: '',
-      icon: '',
+      message: 'test',
+      icon: 'test',
       style: 'notification',
       movies: [],
       loading: true,
       showSearchIcon: true,
+      mainViewOpen: false
     }
   },
 
@@ -75,6 +73,21 @@ var moviesNative = React.createClass({
     setTimeout(() => {
       Animation.startAnimation(this.refs.notification, 150, 0, 'easeInOutQuad', { opacity: 0 });
     }, 1000);
+  },
+
+  addNew: function () {
+    var position = [160, 480];
+
+    if (this.state.mainViewOpen) {
+      position = [160, 284];
+    }
+
+    this.setState({
+      mainViewOpen: !this.state.mainViewOpen
+    });
+
+
+    Animation.startAnimation(this.refs.mainView, 250, 0, 'easeInOutQuad', {position: position });
   },
 
   getMovies(query: String, skip: Number) {
@@ -176,19 +189,34 @@ var moviesNative = React.createClass({
       );
     });
 
+    var notification = {
+      icon: this.state.icon,
+      message: this.state.message,
+      style: this.state.notification
+    };
+
     var image = this.state.showSearchIcon ? <Image source={require('image!search')} style={styles.searchButton}/> : <Image source={require('image!close')} style={styles.searchButton}/>;
 
     return (
       <View style={styles.container}>
-        <Carousel getMovies={this.getMovies} skipped={this.state.skipped} delay={999999999999999999999}>
-          {movies}
-        </Carousel>
+        <NewMovie addNew={this.addNew} />
+
+        <View ref="mainView" style={styles.mainView}>
+          <Carousel getMovies={this.getMovies} skipped={this.state.skipped} delay={999999999999999999999}>
+            {movies}
+          </Carousel>
+
+          <TouchableOpacity onPress={this.addNew}>
+            <Image source={require('image!plus')} style={styles.menuBtn} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={this.displaySearch} ref="searchIcon">
+            {image}
+          </TouchableOpacity>
+        </View>
+
         <View ref="search" style={styles.search}>
           <SearchBar onSearchChange={this.onSearchChange}/>
         </View>
-        <TouchableOpacity onPress={this.displaySearch} ref="searchIcon">
-          {image}
-        </TouchableOpacity>
       </View>
     );
   }
@@ -196,21 +224,39 @@ var moviesNative = React.createClass({
 
 var styles = NestedStyles.create({
   container: {
-    flex: 1,
     width: width,
     height: height,
-    position: 'relative'
+    position: 'relative',
+    mainView: {}
+  },
+  sidebar: {
+    backgroundColor: '#444f5a',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: height,
+    width: 290,
+    borderRightColor: '#2d353e',
+    borderRightWidth: 2,
+    paddingTop: 64
   },
   search: {
     backgroundColor: 'rgba(0,0,0,0.7)',
     opacity: 1,
     flex: 1,
-    padding: 20,
+    padding: 0,
     paddingTop: 40,
     left: 0,
     top: -height,
     position: 'absolute',
     width: width
+  },
+  menuBtn: {
+    position: 'absolute',
+    top: 25,
+    left: 15,
+    width: 30,
+    height: 30
   },
   searchText: {
     backgroundColor: 'transparent',
@@ -219,7 +265,7 @@ var styles = NestedStyles.create({
   searchButton: {
     position: 'absolute',
     top: 35,
-    right: 10,
+    right: 15,
     width: 20,
     height: 20
   },

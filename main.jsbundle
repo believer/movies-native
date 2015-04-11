@@ -960,7 +960,7 @@ var $__1=
   
   React,Animation=$__1.Animation,AppRegistry=$__1.AppRegistry,Image=$__1.Image,ScrollView=$__1.ScrollView,StyleSheet=$__1.StyleSheet,Text=$__1.Text,TouchableOpacity=$__1.TouchableOpacity,View=$__1.View;
 
-var REQUEST_URL = 'http://rickardlaurin.se:3000/movies';
+var REQUEST_URL = 'http://rickardlaurin.se:3000/movies?limit=10';
 
 var resultsCache = {
   dataForQuery: {},
@@ -981,16 +981,16 @@ var moviesNative = React.createClass({displayName: "moviesNative",
       style: 'notification',
       movies: [],
       loading: true,
-      showSearchIcon: true
+      showSearchIcon: true,
     }
   },
 
   componentDidMount: function() {
-    this.getMovies('');
+    this.getMovies('', 0);
   },
 
   _urlForQueryAndPage: function(query        , pageNumber         )         {
-    return query ? REQUEST_URL + '?title=' + query + '&skip=' + pageNumber : REQUEST_URL
+    return query ? REQUEST_URL + '?title=' + query + '&skip=' + pageNumber : REQUEST_URL + '&skip=' + pageNumber
   },
 
   animate: function (message        , type        ) {
@@ -1009,16 +1009,16 @@ var moviesNative = React.createClass({displayName: "moviesNative",
     }.bind(this), 1000);
   },
 
-  getMovies:function(query        ) {
+  getMovies:function(query        , skip        ) {
     this.timeoutID = null;
     this.setState({filter: query});
 
     var cachedResultsForQuery = resultsCache.dataForQuery[query];
 
-    if (cachedResultsForQuery) {
+    if (!skip && cachedResultsForQuery) {
       if (!LOADING[query]) {
         this.setState({
-          dataSource: this.getDataSource(cachedResultsForQuery),
+          dataSource: cachedResultsForQuery,
           loading: true
         });
       } else {
@@ -1031,11 +1031,15 @@ var moviesNative = React.createClass({displayName: "moviesNative",
     resultsCache.dataForQuery[query] = null;
 
     this.setState({
-      loading: true,
+      loading: !skip ? true : false,
       queryNumber: this.state.queryNumber + 1,
     });
 
-    fetch(this._urlForQueryAndPage(query))
+    if (this.state.skipped === skip) {
+      return;
+    }
+
+    fetch(this._urlForQueryAndPage(query, skip))
       .then(function(response)  {return response.json();})
       ["catch"](function(error)  {
         LOADING[query] = false;
@@ -1059,7 +1063,8 @@ var moviesNative = React.createClass({displayName: "moviesNative",
 
         this.setState({
           loading: false,
-          movies: responseData.results,
+          skipped: skip ? skip : 0,
+          movies: skip ? this.state.movies.concat(responseData.results) : responseData.results
         });
       }.bind(this))
       .done();
@@ -1107,7 +1112,7 @@ var moviesNative = React.createClass({displayName: "moviesNative",
 
     return (
       React.createElement(View, {style: styles.container}, 
-        React.createElement(Carousel, {delay: 999999999999999999999}, 
+        React.createElement(Carousel, {getMovies: this.getMovies, skipped: this.state.skipped, delay: 999999999999999999999}, 
           movies
         ), 
         React.createElement(View, {ref: "search", style: styles.search}, 
@@ -39448,7 +39453,6 @@ var styles = StyleSheet.create({
     borderColor: '#aaaaaa',
     borderWidth: 1,
     borderRadius: 3,
-    color: '#CCCCCC',
     padding: 3,
     paddingLeft: 8,
     flexDirection: 'row',
@@ -39499,11 +39503,12 @@ var Carousel = React.createClass({displayName: "Carousel",
     getInitialState: function() {
       var childrenCount = this.props.children.length;
       return {
-        contentOffset: {x: childrenCount > 1 ? width : 0, y: 0},
+        contentOffset: {x: childrenCount > 1 ? 0 : 0, y: 0},
         currentPage: childrenCount > 1 ? 1 : 0,
       };
     },
-    componentDidMount:function(){
+    componentDidMount:function () {
+
       this._setUpTimer();
     },
     _onScrollBegin: function(event) {
@@ -39516,6 +39521,7 @@ var Carousel = React.createClass({displayName: "Carousel",
 
       var childrenCount = this.props.children.length;
       if (offset.x == 0) {
+        return;
         offset = {x: childrenCount*width, y: 0};
       } else if (offset.x == (childrenCount+1)*width) {
         offset = {x: width, y: 0};
@@ -39541,6 +39547,9 @@ var Carousel = React.createClass({displayName: "Carousel",
     },
     _calculateCurrentPage: function(offset) {
       var page = Math.floor((offset - width/2) / width) + 1;
+      if (page % 9 === 0) {
+        this.props.getMovies('', this.props.skipped + 10);
+      }
       this.setState({currentPage: page});
     },
     //TODO: add optional `dots` for displaying current page (like pageControl)
@@ -39561,13 +39570,15 @@ var Carousel = React.createClass({displayName: "Carousel",
       }
 
       //add first one at the last place
-      if (children.length > 1) {
-        pages.push(children[0]);
-      }
+      // if (children.length > 1) {
+      //   pages.push(children[0]);
+      // }
 
       pages = pages.map(function(page, i)  {
         return React.createElement(View, {style: {width: width}, key: "page"+i}, page);
       });
+
+      pages = pages.slice(1);
 
       return (
         React.createElement(ScrollView, {
@@ -39579,7 +39590,7 @@ var Carousel = React.createClass({displayName: "Carousel",
           showsHorizontalScrollIndicator: false, 
           horizontal: true, 
           pagingEnabled: true, 
-          bounces: false, 
+          bounces: true, 
           contentOffset: this.state.contentOffset, 
           contentContainerStyle: [
             styles.horizontalScroll,

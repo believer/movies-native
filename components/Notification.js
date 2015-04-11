@@ -2,6 +2,7 @@
 
 var React = require('react-native');
 var NotificationStore = require('../stores/NotificationStore');
+var NestedStyles       = require('react-native-nested-styles');
 
 var {
   Animation,
@@ -11,6 +12,12 @@ var {
 } = React;
 
 module.exports = React.createClass({
+  propTypes: {
+    style: React.PropTypes.string,
+    icon: React.PropTypes.string.isRequired,
+    message: React.PropTypes.string.isRequired
+  },
+
   render: function () {
     return (
       <View style={styles[this.props.style]}>
@@ -20,7 +27,7 @@ module.exports = React.createClass({
   }
 });
 
-var styles = StyleSheet.create({
+var styles = NestedStyles.create({
   notification: {
     backgroundColor: '#333333',
     width: 320,
@@ -32,7 +39,7 @@ var styles = StyleSheet.create({
     left: 0,
     top: 0,
     flex: 1,
-    opacity: 0,
+    opacity: 1,
     justifyContent: 'center',
     alignItems: 'center'
   },

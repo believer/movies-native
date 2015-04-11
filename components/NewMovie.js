@@ -1,5 +1,7 @@
 var React = require('react-native');
 var Button = require('./Button');
+var Dimensions = require('Dimensions');
+var {width, height} = Dimensions.get('window');
 
 var {
   StyleSheet,
@@ -14,10 +16,10 @@ var REQUEST_URL = 'http://rickardlaurin.se:3000/tmdb';
 module.exports = React.createClass({
   getInitialState: function () {
     return {
-      addedNew: false,
       error: ''
     }
   },
+
   addNewMovie: function () {
     if (!this.state.id) {
       this.setState({
@@ -41,7 +43,7 @@ module.exports = React.createClass({
     xhr.open('POST', REQUEST_URL, true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onload = function () {
-      self.props.animate('Added new movie', 'success');
+      self.props.addNew();
     };
 
     xhr.send('imdbid=' + this.state.id + '&rating=' + this.state.rating);
@@ -69,7 +71,7 @@ module.exports = React.createClass({
           onChange={this.setRating}
           style={styles.searchBarInput}
           keyboardType="numeric"/>
-        <Text>{this.state.error}</Text>
+        <Text style={styles.error}>{this.state.error}</Text>
         <Button clickFunction={this.addNewMovie} text="Add new movie" />
       </View>
     );
@@ -78,15 +80,23 @@ module.exports = React.createClass({
 
 var styles = StyleSheet.create({
   searchBar: {
-    backgroundColor: '#ffffff',
-    color: '#666666',
-    marginTop: 64,
-    marginBottom: 10,
+    backgroundColor: '#444f5a',
     padding: 15,
-    alignItems: 'center',
+    paddingTop: 30,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 200,
+    width: width,
+  },
+  error: {
+    textAlign: 'center',
+    padding: 5,
+    color: '#ffffff'
   },
   searchBarInput: {
-    borderColor: '#5CACC4',
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
     borderRadius: 3,
     borderWidth: 1,
     fontSize: 15,
@@ -96,7 +106,4 @@ var styles = StyleSheet.create({
     padding: 3,
     paddingLeft: 8,
   },
-  button: {
-    flex: 1
-  }
 });
