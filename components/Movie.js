@@ -23,7 +23,11 @@ var PULLDOWN_DISTANCE = 100;
 var hasHeight = false;
 
 module.exports = React.createClass({
-  render() {
+  closeMenu: function () {
+    this.props.onPress();
+  },
+
+  render: function () {
     var poster = 'http://image.tmdb.org/t/p/w500' + this.props.poster;
     var cast = this.props.cast.map((actor, i) => {
       return <Text key={i} style={styles.actor}>{actor}</Text>
@@ -68,9 +72,11 @@ module.exports = React.createClass({
             }
           }}>
           <View style={styles.movie}>
-            <Image
-              source={{uri: poster}}
-              style={styles.thumbnail} />
+            <TouchableHighlight onPress={this.closeMenu} activeOpacity="1">
+              <Image
+                source={{uri: poster}}
+                style={styles.thumbnail} />
+            </TouchableHighlight>
               <View ref="info" style={styles.preinfo}>
                 <Text style={styles.title}>{this.props.title}</Text>
                 <Text style={styles.year}>{this.props.year}</Text>

@@ -204,6 +204,21 @@ var moviesNative = React.createClass({
     });
   },
 
+  closeMenu: function () {
+    console.log('close');
+    this.setState({
+      mainViewOpen: false
+    });
+
+    Animation.startAnimation({
+      node: this.refs.mainView,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      property: 'position',
+      toValue: [160, 284]
+    });
+  },
+
   render: function() {
     if (this.state.loading) {
       return <Loader />
@@ -211,7 +226,7 @@ var moviesNative = React.createClass({
 
     var movies = this.state.movies.map((movie, i) => {
       return (
-        <Movie key={i} {...movie} getMovies={this.getMovies} hideSearchIcon={this.hideSearchIcon} />
+        <Movie key={i} {...movie} getMovies={this.getMovies} hideSearchIcon={this.hideSearchIcon} onPress={this.closeMenu} />
       );
     });
 
@@ -221,7 +236,7 @@ var moviesNative = React.createClass({
       style: this.state.notification
     };
 
-    var image = this.state.showSearchIcon ? <Image source={require('image!search')} style={styles.searchButton}/> : <Image source={require('image!close')} style={styles.searchButton}/>;
+    var image = this.state.showSearchIcon ? <Image source={require('image!search')} style={[styles.searchButton, styles.icons]}/> : <Image source={require('image!close')} style={[styles.searchButton, styles.icons]}/>;
 
     var subfunction = this.state.showType === 'add' ? <NewMovie addNew={this.addNew} /> : <SearchBar onSearchChange={this.onSearchChange} />;
 
@@ -235,8 +250,9 @@ var moviesNative = React.createClass({
           </Carousel>
 
           <TouchableOpacity onPress={this.addNew.bind(this, 'add')} ref="addIcon">
-            <Image source={require('image!plus')} style={styles.menuBtn} />
+            <Image source={require('image!plus')} style={[styles.menuBtn, styles.icons]} />
           </TouchableOpacity>
+
           <TouchableOpacity onPress={this.addNew.bind(this, '')} ref="searchIcon">
             {image}
           </TouchableOpacity>
@@ -278,9 +294,9 @@ var styles = NestedStyles.create({
   menuBtn: {
     position: 'absolute',
     top: 25,
-    left: 15,
-    width: 30,
-    height: 30
+    left: 5,
+    width: 45,
+    height: 45
   },
   searchText: {
     backgroundColor: 'transparent',
@@ -290,8 +306,8 @@ var styles = NestedStyles.create({
     position: 'absolute',
     top: 35,
     right: 15,
-    width: 20,
-    height: 20
+    width: 25,
+    height: 25
   },
 });
 
