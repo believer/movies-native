@@ -3,9 +3,9 @@
 var React = require('react-native');
 var NotificationStore = require('../stores/NotificationStore');
 var NestedStyles       = require('react-native-nested-styles');
+var Animation = require('AnimationExperimental');
 
 var {
-  Animation,
   StyleSheet,
   Text,
   View,

@@ -14,8 +14,9 @@ var getStyleFromRating = require('./utils/getStyleFromRating');
 var NestedStyles       = require('react-native-nested-styles');
 var TimerMixin         = require('react-timer-mixin');
 
+var Animation = require('AnimationExperimental');
+
 var {
-  Animation,
   AppRegistry,
   Image,
   ScrollView,
@@ -68,10 +69,22 @@ var moviesNative = React.createClass({
       style: type
     });
 
-    Animation.startAnimation(this.refs.notification, 250, 0, 'easeInOutQuad', {opacity: 1 });
+    Animation.startAnimation({
+      node: this.refs.notification,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      property: 'opacity',
+      toValue: 1
+    });
 
     setTimeout(() => {
-      Animation.startAnimation(this.refs.notification, 150, 0, 'easeInOutQuad', { opacity: 0 });
+      Animation.startAnimation({
+        node: this.refs.notification,
+        duration: 150,
+        easing: 'easeInOutQuad',
+        property: 'opacity',
+        toValue: 0
+      });
     }, 1000);
   },
 
@@ -92,8 +105,13 @@ var moviesNative = React.createClass({
       mainViewOpen: !this.state.mainViewOpen
     });
 
-
-    Animation.startAnimation(this.refs.mainView, 250, 0, 'easeInOutQuad', {position: position });
+    Animation.startAnimation({
+      node: this.refs.mainView,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      property: 'position',
+      toValue: position
+    });
   },
 
   getMovies(query: String, skip: Number) {
@@ -169,9 +187,21 @@ var moviesNative = React.createClass({
   },
 
   hideSearchIcon(opacity: Number) {
-    Animation.startAnimation(this.refs.searchIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
+    Animation.startAnimation({
+      node: this.refs.searchIcon,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      property: 'opacity',
+      toValue: opacity
+    });
 
-    Animation.startAnimation(this.refs.addIcon, 250, 0, 'easeInOutQuad', { opacity: opacity });
+    Animation.startAnimation({
+      node: this.refs.addIcon,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      property: 'opacity',
+      toValue: opacity
+    });
   },
 
   render: function() {

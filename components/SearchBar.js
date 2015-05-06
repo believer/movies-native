@@ -29,8 +29,8 @@ module.exports = React.createClass({
 var styles = StyleSheet.create({
   searchBar: {
     backgroundColor: '#444f5a',
+    justifyContent: 'center',
     padding: 15,
-    paddingTop: 30,
     position: 'absolute',
     top: 0,
     left: 0,
@@ -43,15 +43,16 @@ var styles = StyleSheet.create({
     color: '#ffffff'
   },
   searchBarInput: {
+    alignSelf: 'center',
     backgroundColor: '#ffffff',
     borderColor: '#ffffff',
     borderRadius: 3,
     borderWidth: 1,
     fontSize: 15,
-    flex: 1,
     marginTop: 10,
     height: 40,
     padding: 3,
     paddingLeft: 8,
+    width: width - 20
   },
 });

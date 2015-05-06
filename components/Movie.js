@@ -3,11 +3,11 @@
 var React = require('react-native');
 var getStyleFromRating = require('../utils/getStyleFromRating');
 var Dimensions = require('Dimensions');
+var Animation = require('AnimationExperimental');
 var {width, height} = Dimensions.get('window');
 
 var {
   ActivityIndicatorIOS,
-  Animation,
   AppRegistry,
   Image,
   ListView,
@@ -42,11 +42,27 @@ module.exports = React.createClass({
             } else {
               if (offsetY > height && !hasHeight) {
                 hasHeight = true;
-                Animation.startAnimation(this.refs.scrollTitle, 500, 0, 'easeInOut', { opacity: 1 });
+
+                Animation.startAnimation({
+                  node: this.refs.scrollTitle,
+                  duration: 500,
+                  easing: 'easeInOutQuad',
+                  property: 'opacity',
+                  toValue: 1
+                });
+
                 this.props.hideSearchIcon(0);
               } else if (offsetY < height && hasHeight) {
                 hasHeight = false;
-                Animation.startAnimation(this.refs.scrollTitle, 500, 0, 'easeInOut', { opacity: 0 });
+
+                Animation.startAnimation({
+                  node: this.refs.scrollTitle,
+                  duration: 500,
+                  easing: 'easeInOutQuad',
+                  property: 'opacity',
+                  toValue: 0
+                });
+
                 this.props.hideSearchIcon(1);
               }
             }
