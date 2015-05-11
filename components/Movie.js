@@ -86,7 +86,7 @@ module.exports = React.createClass({
           <View style={[styles.content, styles.transparent]}>
             <Text style={styles.director}>
               <Text style={styles.bold}>Directed by: </Text>
-              {this.props.director ? this.props.director : '-'}
+              {this.props.director ? this.props.director.join(', ') : '-'}
             </Text>
             <Text style={styles.desc}>{this.props.desc}</Text>
             <View style={styles.cast}>

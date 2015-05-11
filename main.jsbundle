@@ -1136,6 +1136,21 @@ var moviesNative = React.createClass({displayName: "moviesNative",
     });
   },
 
+  closeMenu: function () {
+    console.log('close');
+    this.setState({
+      mainViewOpen: false
+    });
+
+    Animation.startAnimation({
+      node: this.refs.mainView,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      property: 'position',
+      toValue: [160, 284]
+    });
+  },
+
   render: function() {
     if (this.state.loading) {
       return React.createElement(Loader, null)
@@ -1143,7 +1158,7 @@ var moviesNative = React.createClass({displayName: "moviesNative",
 
     var movies = this.state.movies.map(function(movie, i)  {
       return (
-        React.createElement(Movie, React.__spread({key: i},  movie, {getMovies: this.getMovies, hideSearchIcon: this.hideSearchIcon}))
+        React.createElement(Movie, React.__spread({key: i},  movie, {getMovies: this.getMovies, hideSearchIcon: this.hideSearchIcon, onPress: this.closeMenu}))
       );
     }.bind(this));
 
@@ -1169,6 +1184,7 @@ var moviesNative = React.createClass({displayName: "moviesNative",
           React.createElement(TouchableOpacity, {onPress: this.addNew.bind(this, 'add'), ref: "addIcon"}, 
             React.createElement(Image, {source: require('image!plus'), style: [styles.menuBtn, styles.icons]})
           ), 
+
           React.createElement(TouchableOpacity, {onPress: this.addNew.bind(this, ''), ref: "searchIcon"}, 
             image
           )
@@ -38865,7 +38881,11 @@ var PULLDOWN_DISTANCE = 100;
 var hasHeight = false;
 
 module.exports = React.createClass({displayName: "exports",
-  render:function() {
+  closeMenu: function () {
+    this.props.onPress();
+  },
+
+  render: function () {
     var poster = 'http://image.tmdb.org/t/p/w500' + this.props.poster;
     var cast = this.props.cast.map(function(actor, i)  {
       return React.createElement(Text, {key: i, style: styles.actor}, actor)
@@ -38910,9 +38930,11 @@ module.exports = React.createClass({displayName: "exports",
             }
           }.bind(this)}, 
           React.createElement(View, {style: styles.movie}, 
-            React.createElement(Image, {
-              source: {uri: poster}, 
-              style: styles.thumbnail}), 
+            React.createElement(TouchableHighlight, {onPress: this.closeMenu, activeOpacity: "1"}, 
+              React.createElement(Image, {
+                source: {uri: poster}, 
+                style: styles.thumbnail})
+            ), 
               React.createElement(View, {ref: "info", style: styles.preinfo}, 
                 React.createElement(Text, {style: styles.title}, this.props.title), 
                 React.createElement(Text, {style: styles.year}, this.props.year), 
